@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%231E2A4A%22/%3E%3Cpath%20d%3D%22M12%2020%20L22%2032%20L12%2044%22%20fill%3D%22none%22%20stroke%3D%22%239AA8C7%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M26%2020%20L36%2032%20L26%2044%22%20fill%3D%22none%22%20stroke%3D%22%23C8D0E2%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M40%2020%20L50%2032%20L40%2044%22%20fill%3D%22none%22%20stroke%3D%22%23E59A2F%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
+<title>تتبّع الكود خطوة بخطوة</title>
+<style>
+:root{
+  --bg:#F5F6FA; --coral:#E59A2F; --corall:#FBD38D; --paper:#FFFFFF; --green:#1E2A4A; --gold:#9AA8C7; --gold2:#E59A2F;
+  --codebg:#E8ECF5; --navy:#1E2A4A; --muted:#6B6A63; --line:#D9DEEA;
+  --c-kw:#003B4F; --c-type:#AD0000; --c-num:#AD0000; --c-id:#003B4F; --c-p:#5E5E5E; --c-str:#20794D; --c-inc:#00769E; --c-com:#5E5E5E;
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --ar: "Segoe UI", Tahoma, "Geeza Pro", "Noto Naskh Arabic", Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:#2A2A28;font-family:var(--ar)}
+button{font-family:inherit}
+.topband{height:8px;background:var(--coral)}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px 12px;border-bottom:1px solid var(--line)}
+header img{height:64px;width:auto}
+header .titles{flex:1}
+header .logo{flex:none;direction:ltr;unicode-bidi:isolate}
+header .logo text{direction:ltr;unicode-bidi:bidi-override}
+header h1{margin:0;font-family:"Cairo",var(--ar);font-size:27px;color:var(--green);font-weight:800;line-height:1.35}
+header .sub{font-family:"Cairo",var(--ar);color:var(--coral);font-weight:700;font-size:15px;margin-top:0;text-align:right;letter-spacing:.3px}
+.tabs{display:flex;gap:8px}
+.tab{border:1.5px solid var(--gold);background:var(--paper);color:var(--green);padding:9px 16px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+.tab.on{background:var(--green);border-color:var(--green);color:#fff}
+main{padding:14px 20px 24px}
+/* editor view */
+#editorView{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:18px}
+.card{background:var(--paper);border:1.5px solid var(--gold);border-radius:18px;padding:14px 16px;box-shadow:0 2px 0 rgba(154,168,199,.35)}
+.card h2{margin:0 0 10px;font-size:17px;color:var(--green)}
+.card h2 small{color:var(--muted);font-weight:400;font-size:13px}
+.editor{position:relative;display:flex;direction:ltr;border-radius:12px;background:var(--codebg);border:1px solid #C8D0E2;overflow:hidden;height:min(62vh,600px)}
+.gutter{direction:ltr;padding:12px 8px 12px 10px;text-align:right;color:#8E9AB5;font:13px/24px var(--mono);user-select:none;overflow:hidden;background:#DCE2EF;min-width:44px;white-space:pre}
+.editor textarea{direction:ltr;flex:1;border:0;resize:none;background:transparent;padding:12px 14px;font:15px/24px var(--mono);color:#003B4F;outline:none;tab-size:4;white-space:pre;overflow:auto}
+#inputBox{direction:ltr;width:100%;height:120px;border-radius:12px;border:1px solid #C8D0E2;background:var(--codebg);font:15px/1.6 var(--mono);padding:10px 12px;color:#003B4F;resize:vertical;outline:none}
+.side{display:flex;flex-direction:column;gap:14px}
+.btn{border:1.5px solid var(--gold);background:var(--paper);color:var(--green);border-radius:12px;padding:9px 14px;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#FDF1E0}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff;font-size:17px;padding:12px 18px;justify-content:center}
+.btn.primary:hover{background:#141D35}
+.btn:disabled{opacity:.4;cursor:default}
+.hint{color:var(--muted);font-size:13.5px;line-height:1.7;margin:0}
+.err{display:none;background:#FCEBEA;border:1px solid #E7B7B3;color:#8A1F17;border-radius:10px;padding:8px 12px;font-size:14px;margin-top:10px;white-space:pre-wrap}
+.err.show{display:block}
+/* stage */
+#stage{display:none}
+#stage.show{display:block}
+.controls{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:rgba(245,246,250,.96);padding:8px 0 10px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.controls .grow{flex:1}
+.stepno{font:600 14px var(--ar);color:var(--muted);min-width:90px}
+.status{font-weight:700;font-size:14px;padding:6px 12px;border-radius:10px;display:none}
+.status.end{display:inline-block;background:#E1F5EE;color:#034C3D}
+.status.bad{display:inline-block;background:#FCEBEA;color:#8A1F17}
+.speed{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.speed input{width:110px;accent-color:var(--green)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+#stackCol{min-height:300px}
+.grid>.col:last-child{position:sticky;top:72px;max-height:calc(100vh - 84px);overflow:auto}
+/* windows */
+.win{direction:ltr;background:var(--codebg);border:1.5px solid var(--gold);border-radius:16px;padding:10px 14px 12px;transition:background .3s,border-color .3s,opacity .3s;position:relative}
+.win.enter{animation:winIn .35s ease-out}
+.win.leave{animation:winOut .25s ease-in forwards}
+@keyframes winIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes winOut{to{opacity:0;transform:translateY(10px) scale(.97)}}
+.win.dim,.win.mini{background:#F1F1F0;border-color:#D0D0CC}
+.whead{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.fname{font:700 14px var(--mono);color:var(--c-id);padding:4px 0}
+.dim .fname,.mini .fname{color:#B0B0AC}
+.vars{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;flex:1}
+.var{display:flex;flex-direction:column;align-items:center;min-width:44px}
+.var .vn{font:600 12px var(--mono);color:var(--muted);margin-bottom:2px}
+.var .vv{font:700 16px var(--mono);border:1.5px solid #B9C3B7;background:#fff;border-radius:9px;padding:4px 10px;min-width:44px;text-align:center;color:var(--navy)}
+.var.chg .vv{animation:flash 1s ease-out}
+.dim .var .vv,.mini .var .vv{color:#A8A8A4;border-color:#D8D8D4;background:#F7F7F6}
+.dim .var .vn,.mini .var .vn{color:#B8B8B4}
+@keyframes flash{0%{background:#FFE58A;transform:scale(1.12)}100%{background:#fff;transform:none}}
+.code{font:15px/1.55 var(--mono);tab-size:4;white-space:pre;overflow-x:auto;padding:2px 0}
+.ln{position:relative;padding:1px 8px;border-radius:6px;min-height:1.55em}
+.ln.hasb{padding-top:24px}
+.ln.cur{background:#FFF0B8}
+.ln.true{background:#CFEBD6}
+.ln.false{background:#F6D5D2}
+.ln.ret{background:#FFF0B8}
+.mark{font-family:"Segoe UI Symbol","Apple Symbols",sans-serif;font-weight:900;margin-left:10px}
+.mark.ok{color:#1E8449}.mark.no{color:#C0392B}
+.tok.t-kw{color:var(--c-kw);font-weight:700}
+.tok.t-type{color:var(--c-type)}
+.tok.t-num{color:var(--c-num)}
+.tok.t-id{color:var(--c-id)}
+.tok.t-p{color:var(--c-p)}
+.tok.t-str{color:var(--c-str)}
+.tok.t-inc{color:var(--c-inc)}
+.tok.t-com{color:var(--c-com)}
+.dim .tok,.mini .tok{color:#BDBDB8 !important;font-weight:400 !important}
+.dim .cw.keep .tok,.mini .cw.keep .tok{color:inherit}
+.cw{position:relative}
+.cw.keep{background:var(--corall);border-radius:4px}
+.dim .cw.keep .tok.t-kw,.mini .cw.keep .tok.t-kw{color:var(--c-kw) !important;font-weight:700 !important}
+.dim .cw.keep .tok.t-type,.mini .cw.keep .tok.t-type,.dim .cw.keep .tok.t-num,.mini .cw.keep .tok.t-num{color:var(--c-num) !important}
+.dim .cw.keep .tok.t-id,.mini .cw.keep .tok.t-id{color:var(--c-id) !important}
+.dim .cw.keep .tok.t-p,.mini .cw.keep .tok.t-p{color:var(--c-p) !important}
+.bdg{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-3px);background:var(--navy);color:#fff;font:700 13px var(--ar);min-width:22px;height:22px;padding:0 6px;border-radius:11px;display:flex;align-items:center;justify-content:center;white-space:nowrap;box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.bdg.new{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:translate(-50%,6px) scale(.3);opacity:0}to{transform:translate(-50%,-3px) scale(1);opacity:1}}
+.retchip{display:inline-flex;align-items:center;gap:4px;margin-left:12px;background:var(--navy);color:#fff;font:700 13px var(--ar);border-radius:11px;padding:1px 9px;vertical-align:middle;animation:pop2 .4s ease-out}
+@keyframes pop2{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+.mini .code{opacity:1}
+.mini .whead{margin-bottom:2px}
+.ellip{color:#B8B8B4;font:13px var(--mono);padding:0 8px}
+/* arrays */
+.arr{display:flex;align-items:flex-start;gap:10px;direction:ltr;margin:4px 0}
+.arr .an{font:700 15px var(--mono);color:var(--c-id);padding-top:20px;min-width:24px}
+.cells{display:flex;flex-wrap:wrap;gap:0;row-gap:6px}
+.cell{display:flex;flex-direction:column;align-items:center}
+.cell i{font:11px var(--mono);color:#8F8E86;font-style:normal;height:16px}
+.cell b{font:700 15px var(--mono);min-width:42px;height:34px;padding:0 6px;display:flex;align-items:center;justify-content:center;background:var(--codebg);border:1.5px solid var(--gold);margin-left:-1.5px;color:var(--c-num);transition:background .3s}
+.cell.r b{outline:3px solid var(--gold2);outline-offset:-1px;position:relative;z-index:2}
+.cell.w b{animation:flash 1s ease-out}
+.dim .cell b,.mini .cell b{opacity:.55}
+.sub2{display:flex;flex-direction:column;gap:2px}
+.memgrid{display:flex;flex-direction:column;gap:10px}
+.memvars{display:flex;flex-wrap:wrap;gap:10px}
+.empty{color:#A5A39A;font-size:14px}
+#out{direction:ltr;font:14px/1.55 var(--mono);white-space:pre-wrap;margin:0;color:#003B4F;min-height:24px;max-height:160px;overflow:auto;background:var(--codebg);border-radius:10px;padding:8px 10px}
+/* tree */
+.treebox{overflow:auto;max-height:46vh;border-radius:12px;background:#EEF1F8;border:1px solid #D9DEEA;direction:ltr}
+.treetools{display:flex;gap:6px;align-items:center;margin-right:auto}
+.ttb{width:30px;height:30px;border-radius:8px;border:1px solid var(--gold);background:#fff;color:var(--green);font-weight:800;cursor:pointer}
+.cardhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cardhead h2{margin:0}
+.ex{margin-right:auto;font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.ex select{font:600 14px var(--ar);color:var(--green);border:1.5px solid var(--gold);border-radius:10px;padding:5px 8px;background:#fff}
+.toggle{font-size:13px;font-weight:700;color:var(--green);border:1px solid var(--gold);border-radius:999px;padding:3px 12px;background:#FDF1E0}
+#treeCard.closed .cardhead{margin-bottom:0}
+svg .nd{transition:opacity .3s}
+svg .pop{animation:treePop .45s cubic-bezier(.3,1.5,.5,1)}
+@keyframes treePop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+svg .pop{transform-box:fill-box;transform-origin:center}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:16px;height:12px;border-radius:4px;display:inline-block;border:1.5px solid #9a9a9a}
+.foot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--green);font-size:14.5px;font-weight:700;margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.mailbtn{border:0;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#fff;text-decoration:none;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.mailbtn:hover{background:#141D35}
+.mailtxt{color:var(--green);font:600 13.5px var(--mono);user-select:all;text-decoration:none;background:#fff;border:1px solid var(--gold);border-radius:999px;padding:5px 12px;animation:pop2 .3s ease-out}
+.mailtxt:hover{text-decoration:underline}
+.kbd{font:12px var(--mono);border:1px solid #ccc;border-bottom-width:2px;border-radius:5px;padding:0 5px;background:#fff}
+
+/* definitions */
+.defs{direction:ltr;background:#fff;border:1.5px dashed var(--gold);border-radius:16px;padding:8px 12px 10px}
+.defsh{direction:rtl;font:700 14px var(--ar);color:var(--green);margin-bottom:4px}
+.defsh small{font-weight:400;color:var(--muted);font-size:12.5px;margin-right:6px}
+.defcode{max-height:240px;overflow:auto;font-size:13.5px}
+.ln.dl{padding:0 8px 0 4px;border-radius:5px;border-left:3px solid transparent}
+.ln.dl .tok{opacity:.5}
+.ln.dl.act,.ln.dl.use{background:#FFF0B8;border-left-color:var(--coral)}
+.ln.dl.act .tok,.ln.dl.use .tok{opacity:1}
+.ln.dl.wait{background:#F1F1F0}
+.ln.dl.wait .tok{opacity:.75}
+.lno{display:inline-block;width:26px;color:#9AA3B8;font-size:11.5px;user-select:none}
+.deftag{font:700 11.5px var(--ar);color:#fff;background:var(--coral);border-radius:999px;padding:1px 8px;margin-left:10px;vertical-align:middle}
+.deftag.w{background:#9AA3B8}
+.mainmark{direction:ltr;margin:6px 0 2px;padding:4px 10px;border-radius:8px;background:var(--codebg);color:var(--c-id);font:600 13px var(--mono);display:flex;align-items:center;gap:10px}
+.mainmark span{direction:rtl;font:700 12px var(--ar);color:var(--green)}
+.startchip{font:700 12px var(--ar);color:#fff;background:var(--coral);border-radius:999px;padding:3px 10px;align-self:center;direction:rtl;animation:pop2 .4s ease-out}
+/* data structures */
+.bigvars{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-start;padding:6px 0 10px;margin-bottom:6px;border-bottom:1px dashed #C8D0E2}
+.dim .bigvars{opacity:.6}
+.ds{display:flex;flex-direction:column;gap:3px;direction:ltr;align-items:flex-start}
+.dsn{font:700 13px var(--mono);color:var(--c-id)}
+.dsn small{font-weight:400;color:#8F8E86;margin-left:6px;font-size:11.5px}
+.var.rd .vv{outline:3px solid var(--gold2);outline-offset:-1px}
+.cell b.ch{color:var(--c-str)}
+.cell.nw b{animation:popIn .45s cubic-bezier(.3,1.5,.5,1)}
+.grid2{display:flex;flex-direction:column;gap:2px}
+.row2{display:flex;align-items:flex-end;gap:6px}
+.row2 .cell b{height:30px}
+.ri{font:11px var(--mono);color:#8F8E86;min-width:16px;text-align:right}
+.more{font-size:12px;color:var(--muted);padding:6px 8px;align-self:center}
+.tbl{border-collapse:collapse;font:14px var(--mono);background:#fff;border:1.5px solid var(--gold)}
+.tbl th{background:#E1E6F2;color:var(--green);font-weight:700;padding:3px 10px;border:1px solid #CBD3E5}
+.tbl td{padding:3px 12px;border:1px solid #E1E6F0;color:var(--navy);text-align:center;white-space:nowrap}
+.tbl td.ri{color:#8F8E86;font-size:11px;padding:3px 6px}
+.tbl tr.r td{background:#FFF3C4}
+.tbl td.rdc{box-shadow:inset 0 0 0 3px var(--gold2)}
+.tbl tr.nw td{animation:rowIn .6s ease-out}
+.tbl td.chc{animation:flash 1s ease-out}
+.tbl tr.dup td{animation:shake .5s}
+.tbl .mk{font-weight:700;color:#AD0000}
+.tbl tr.miss td{color:#C0392B;background:#FCEBEA;font-style:italic;font-family:var(--ar);font-size:12.5px}
+.tube{display:flex;align-items:center;gap:8px;border:2px solid var(--gold);border-left:2px dashed var(--gold);border-right:2px dashed var(--gold);border-radius:12px;padding:6px 8px;background:#fff;min-width:170px}
+.lab{font:700 11px var(--mono);color:#C47A12;letter-spacing:.5px}
+.items{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font:700 14px var(--mono);background:var(--codebg);border:1.5px solid #B9C3B7;border-radius:8px;padding:4px 10px;color:var(--navy);display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.chip.r,.circ.r{outline:3px solid var(--gold2);outline-offset:-1px}
+.chip.nw,.circ.nw{animation:popIn .45s cubic-bezier(.3,1.5,.5,1)}
+.chip.top{background:#FFF0B8;border-color:var(--gold2)}
+.chip em{font:600 10.5px var(--ar);font-style:normal;color:#A86510;background:#fff;border-radius:6px;padding:0 4px}
+.stk{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px solid var(--gold);border-top:none;border-radius:0 0 12px 12px;padding:4px 10px 8px;background:#fff;min-width:90px}
+.circ{min-width:38px;height:38px;border-radius:19px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;font:700 14px var(--mono);background:#FDF1E0;border:1.5px solid #E59A2F;color:#A86510;white-space:nowrap}
+.circ.dup{animation:shake .5s}
+.circ.miss{background:#FCEBEA;border:1.5px dashed #C0392B;color:#C0392B}
+.objc{border:1.5px solid var(--gold);background:#fff;border-radius:12px;padding:6px 10px 8px;direction:ltr}
+.ofs{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.vv.sm{font-size:12px;font-weight:600}
+.chg2{animation:flashBox 1s ease-out}
+.dim .ds,.mini .ds,.dim .objc,.mini .objc{opacity:.55}
+@keyframes popIn{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+@keyframes rowIn{from{background:#CFEBD6}to{background:transparent}}
+@keyframes flashBox{0%{box-shadow:0 0 0 4px #FFE58A}100%{box-shadow:none}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@media (max-width:980px){#editorView,.grid{grid-template-columns:1fr}}
+@media (max-width:980px){.grid>.col:last-child{position:static;max-height:none;overflow:visible}}
+@media (max-width:700px){
+  header{padding:10px 14px;gap:10px}
+  header .logo{width:84px;height:40px}
+  header h1{font-size:20px}
+  header .sub{font-size:12px}
+  main{padding:10px 10px 20px}
+  .controls{flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:6px 0 8px;scrollbar-width:none}
+  .controls::-webkit-scrollbar{display:none}
+  .controls .btn{flex:none;font-size:13px;padding:7px 10px;border-radius:10px}
+  .controls .btn.primary{font-size:14px !important;padding:7px 16px !important}
+  .controls .speed,.controls .grow{display:none}
+  #prevBtn{order:-2} #nextBtn{order:-1} .stepno,.status{order:-3}
+  .stepno{min-width:auto;font-size:12.5px;flex:none}
+  .status{flex:none;font-size:12.5px}
+  .win{padding:8px 8px 10px;border-radius:12px}
+  .code{font-size:13px}
+  .defcode{font-size:12px;max-height:180px}
+  .editor{height:52vh}
+  .card{padding:12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<div class="topband"></div>
+<header>
+  <svg class="logo" viewBox="0 0 200 96" width="132" height="63" role="img" aria-label="شعار خطوات C++" direction="ltr"><title>خطوات C++</title>
+    <path d="M16 30 L32 48 L16 66" fill="none" stroke="#C8D0E2" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M38 30 L54 48 L38 66" fill="none" stroke="#9AA8C7" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M60 30 L76 48 L60 66" fill="none" stroke="#E59A2F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="88" y="62" direction="ltr" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="38" font-weight="700" fill="#1E2A4A">C++</text>
+  </svg>
+  <div class="titles">
+    <h1>تتبّع الكود خطوة بخطوة</h1>
+    <div class="sub" dir="ltr">Step-by-Step Code Tracing</div>
+  </div>
+</header>
+<main>
+  <section id="editorView">
+    <div class="card">
+      <div class="cardhead"><h2>الكود <small dir="ltr">(C++)</small></h2><label class="ex">أمثلة جاهزة:
+        <select id="exSel"><option value="">اختر مثالًا…</option><option value="rec">Fibonacci - Recursion</option><option value="memo">Fibonacci - Top-Down DP</option><option value="bu">Fibonacci - Bottom-Up DP</option></select></label></div>
+      <div class="editor"><div class="gutter" id="gutter">1</div><textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea></div>
+      <div class="err" id="parseErr"></div>
+    </div>
+    <div class="side">
+      <div class="card">
+        <h2>المدخلات <small>(ما يُقرأ بـ cin)</small></h2>
+        <textarea id="inputBox" spellcheck="false" placeholder="مثال: 5"></textarea>
+      </div>
+      <button class="btn primary" id="startBtn">▶ ابدأ التتبّع</button>
+      <div class="card">
+        <h2>طريقة الاستخدام</h2>
+        <p class="hint">كل نقرة على مساحة العرض أو زر «التالي» تنفّذ خطوة واحدة. لوحة المفاتيح: <span class="kbd">Space</span> أو <span class="kbd">←</span> للتالي، و<span class="kbd">→</span> للسابق.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="stage">
+    <div class="controls" id="controls">
+      <button class="btn" id="editBtn">✎ تعديل الكود</button>
+      <button class="btn" id="restartBtn">⟲ من البداية</button>
+      <button class="btn" id="prevBtn">→ السابق</button>
+      <button class="btn primary" id="nextBtn" style="font-size:15px;padding:9px 22px">التالي ←</button>
+      <button class="btn" id="playBtn">▶ تشغيل تلقائي</button>
+      <label class="speed">السرعة <input type="range" id="speed" min="0" max="100" value="55"></label>
+      <button class="btn" id="endBtn">⇤ إلى النهاية</button>
+      <span class="grow"></span>
+      <span class="status" id="status"></span>
+      <span class="stepno" id="stepno">الخطوة 0</span>
+    </div>
+    <div class="grid" id="clickArea">
+      <div class="col" id="stackCol"></div>
+      <div class="col">
+        <div class="card" id="memCard">
+          <h2>المتغيرات العامة</h2>
+          <div class="memgrid" id="globals"></div>
+        </div>
+        <div class="card">
+          <h2>المخرجات <small>(cout)</small></h2>
+          <pre id="out"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+  <footer class="foot">
+    <span>تنفيذ: أثير خبتي</span>
+    <button class="mailbtn" id="mailBtn" type="button" aria-expanded="false" aria-controls="mailTxt">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      <span>تواصل</span>
+    </button>
+    <a class="mailtxt" id="mailTxt" dir="ltr" href="mailto:khabti-atheer@hotmail.com" hidden>khabti-atheer@hotmail.com</a>
+  </footer>
+</main>
+
+<script>
+"use strict";
+/* ===================== presets ===================== */
+const PRESETS={
+rec:{code:`#include <bits/stdc++.h>
+using namespace std;
+
+int fib(int n)
+{
+	if (n == 0) return 0;
+	if (n == 1) return 1;
+	return fib(n - 1) + fib(n - 2);
+}
+
+int main() {
+	int n;
+	cin >> n;
+
+	cout << fib(n);
+}
+`,input:'5'},
+memo:{code:`#include <bits/stdc++.h>
+using namespace std;
+
+vector<long long> dp;
+
+ long long fib(int n) {
+	if (n == 0) return 0;
+	if (n == 1) return 1;
+
+	if (dp[n] != -1) return dp[n];
+
+	dp[n] = fib(n - 1) + fib(n - 2);
+	return dp[n];
+}
+
+int main() {
+	int n;
+	cin >> n;
+
+	dp.assign(n + 1, -1);
+
+	cout << fib(n);
+}
+`,input:'5'},
+bu:{code:`#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+	int n;
+	cin >> n;
+
+	vector<long long> dp(n + 1, 0);
+
+	dp[0] = 0;
+	if (n >= 1) dp[1] = 1;
+
+	for (int i = 2; i <= n; i++) {
+		dp[i] = dp[i - 1] + dp[i - 2];
+	}
+
+	cout << dp[n];
+}
+`,input:'5'}};
+
+/* ===================== tokenizer / parser ===================== */
+class CErr extends Error{constructor(msg,line){super(msg);this.line=line}}
+const ESC={n:'\n',t:'\t','0':'\0','\\':'\\',"'":"'",'"':'"',r:'\r'};
+function tokenize(src){
+  const T=[];let i=0,line=1;const L=src.length;const defs=new Map();
+  const ops3=['<<=','>>='],ops2=['<<','>>','<=','>=','==','!=','&&','||','++','--','+=','-=','*=','/=','%=','->','::','&=','|=','^='];
+  while(i<L){
+    const c=src[i];
+    if(c==='\n'){line++;i++;continue}
+    if(c===' '||c==='\t'||c==='\r'){i++;continue}
+    if(c==='/'&&src[i+1]==='/'){while(i<L&&src[i]!=='\n')i++;continue}
+    if(c==='/'&&src[i+1]==='*'){i+=2;while(i<L&&!(src[i]==='*'&&src[i+1]==='/')){if(src[i]==='\n')line++;i++}i+=2;continue}
+    if(c==='#'){
+      let j=i;while(j<L&&src[j]!=='\n')j++;
+      const m=/^#\s*define\s+([A-Za-z_]\w*)\s+(.+)$/.exec(src.slice(i,j).trim());
+      if(m)defs.set(m[1],tokenize(m[2]).slice(0,-1));
+      i=j;continue}
+    const st=i;
+    if(/[A-Za-z_]/.test(c)){while(i<L&&/\w/.test(src[i]))i++;const w=src.slice(st,i);
+      if(defs.has(w)){for(const d of defs.get(w))T.push(Object.assign({},d,{s:st,e:i,line}));continue}
+      T.push({t:'id',v:w,s:st,e:i,line});continue}
+    if(/\d/.test(c)||(c==='.'&&/\d/.test(src[i+1]||''))){
+      while(i<L&&/[\d.]/.test(src[i]))i++;
+      if(/[eE]/.test(src[i]||'')){i++;if(/[+-]/.test(src[i]))i++;while(/\d/.test(src[i]||''))i++}
+      const raw=src.slice(st,i);while(i<L&&/[uUlLfF]/.test(src[i]))i++;
+      T.push({t:'num',v:Number(raw),fl:/\./.test(raw),s:st,e:i,line});continue}
+    if(c==='"'){i++;let s='';while(i<L&&src[i]!=='"'&&src[i]!=='\n'){if(src[i]==='\\'){i++;s+=ESC[src[i]]??src[i]}else s+=src[i];i++}i++;T.push({t:'str',v:s,s:st,e:i,line});continue}
+    if(c==="'"){i++;let ch;if(src[i]==='\\'){i++;ch=ESC[src[i]]??src[i]}else ch=src[i];i+=2;T.push({t:'chr',v:ch,s:st,e:i,line});continue}
+    const op=ops3.find(o=>src.startsWith(o,i))||ops2.find(o=>src.startsWith(o,i))||c;
+    i+=op.length;T.push({t:'op',v:op,s:st,e:i,line});
+  }
+  T.push({t:'eof',v:'',s:L,e:L,line});
+  return T;
+}
+const TYPEW=new Set(['int','long','short','unsigned','signed','double','float','bool','char','string','void','auto','size_t','const','static',
+  'vector','deque','queue','stack','priority_queue','set','unordered_set','multiset','map','unordered_map','pair']);
+const TEMPL=new Set(['vector','deque','queue','stack','priority_queue','set','unordered_set','multiset','map','unordered_map','pair','greater','less']);
+const ASSIGN=new Set(['=','+=','-=','*=','/=','%=','<<=','>>=','&=','|=','^=']);
+const LEVELS=[['||'],['&&'],['|'],['^'],['&'],['==','!='],['<','<=','>','>='],['<<','>>'],['+','-'],['*','/','%']];
+class Parser{
+  constructor(src){this.src=src;this.t=tokenize(src);this.p=0;this.structs=new Map();this.aliases=new Map()}
+  peek(k=0){return this.t[Math.min(this.p+k,this.t.length-1)]}
+  next(){return this.t[this.p++]}
+  prev(){return this.t[this.p-1]}
+  is(v,k=0){const x=this.peek(k);return (x.t==='op'||x.t==='id')&&x.v===v}
+  err(m,tok){tok=tok||this.peek();throw new CErr(m,tok.line)}
+  eat(v){const x=this.peek();if(!this.is(v))this.err(`كان متوقعًا «${v}» ووُجد «${x.v||'نهاية الملف'}»`,x);return this.next()}
+  skipStd(){while(this.peek().t==='id'&&(this.peek().v==='std')&&this.is('::',1))this.p+=2}
+  isTypeWord(v){return TYPEW.has(v)||this.structs.has(v)||this.aliases.has(v)}
+  isTypeStart(){let k=0;while(this.is('std',k)&&this.is('::',k+1))k+=2;const x=this.peek(k);return x.t==='id'&&this.isTypeWord(x.v)}
+  closeAngle(){const x=this.peek();if(x.t==='op'&&x.v==='>>'){x.v='>';x.s+=1;return}if(x.t==='op'&&x.v==='>='){x.v='=';x.s+=1;return}this.eat('>')}
+  parseType(){
+    let sign=false;
+    for(;;){this.skipStd();const x=this.peek();if(x.t==='id'&&['const','static','struct','typename','inline'].includes(x.v)){this.next();continue}
+      if(x.t==='id'&&(x.v==='unsigned'||x.v==='signed')){this.next();sign=true;continue}break}
+    this.skipStd();
+    if(sign&&!(this.peek().t==='id'&&this.isTypeWord(this.peek().v)))return {kind:'int'};
+    const x=this.next();
+    if(x.t!=='id')this.err('نوع غير معروف',x);
+    let t=null;
+    if(TEMPL.has(x.v)&&this.is('<')){
+      this.next();const a=[this.parseType()];while(this.is(',')){this.next();a.push(this.parseType())}this.closeAngle();
+      switch(x.v){
+        case 'vector':t={kind:'vector',of:a[0]};break;
+        case 'deque':t={kind:'deque',of:a[0]};break;
+        case 'queue':t={kind:'queue',of:a[0]};break;
+        case 'stack':t={kind:'stack',of:a[0]};break;
+        case 'priority_queue':t={kind:'pq',of:a[0],greater:!!(a[2]&&a[2].kind==='greater')};break;
+        case 'set':t={kind:'set',of:a[0],ordered:true};break;
+        case 'multiset':t={kind:'set',of:a[0],ordered:true,multi:true};break;
+        case 'unordered_set':t={kind:'set',of:a[0],ordered:false};break;
+        case 'map':t={kind:'map',k:a[0],v:a[1],ordered:true};break;
+        case 'unordered_map':t={kind:'map',k:a[0],v:a[1],ordered:false};break;
+        case 'pair':t={kind:'pair',a:a[0],b:a[1]};break;
+        case 'greater':t={kind:'greater'};break;
+        case 'less':t={kind:'less'};break;
+      }
+    } else if(this.structs.has(x.v))t={kind:'struct',name:x.v};
+    else if(this.aliases.has(x.v))t=this.aliases.get(x.v);
+    else switch(x.v){
+      case 'long':{while(this.is('long')||this.is('int'))this.next();if(this.is('double')){this.next();t={kind:'double'}}else t={kind:'int'};break}
+      case 'short':case 'int':case 'size_t':t={kind:'int'};break;
+      case 'double':case 'float':t={kind:'double'};break;
+      case 'bool':t={kind:'bool'};break;
+      case 'char':t={kind:'char'};break;
+      case 'string':t={kind:'string'};break;
+      case 'void':t={kind:'void'};break;
+      case 'auto':t={kind:'auto'};break;
+    }
+    if(!t)this.err(`النوع «${x.v}» غير مدعوم في المختبر`,x);
+    if(this.is('::')&&['iterator','const_iterator','reverse_iterator'].includes(this.peek(1).v)){this.p+=2;t={kind:'auto'}}
+    while(this.is('const'))this.next();
+    if(this.is('*'))this.err('المؤشرات (*) غير مدعومة في المختبر',this.peek());
+    return t;
+  }
+  program(){
+    const funcs={},globals=[],items=[];
+    while(this.peek().t!=='eof'){
+      if(this.is('using')){
+        if(this.peek(1).t==='id'&&this.is('=',2)){this.next();const nm=this.next().v;this.next();this.aliases.set(nm,this.parseType());this.eat(';');continue}
+        while(!this.is(';')&&this.peek().t!=='eof')this.next();this.next();continue}
+      if(this.is('typedef')){this.next();const t=this.parseType();const nm=this.next().v;this.aliases.set(nm,t);this.eat(';');continue}
+      if(this.is(';')){this.next();continue}
+      if((this.is('struct')||this.is('class'))&&this.peek(1).t==='id'&&this.is('{',2)){const s0=this.peek().line,nm=this.peek(1).v;this.structDef();items.push({kind:'struct',name:nm,s:s0,e:this.prev().line});continue}
+      const st=this.peek();
+      if(!this.isTypeStart())this.err(`لم أفهم «${st.v}» هنا`,st);
+      const type=this.parseType();
+      while(this.is('&'))this.next();
+      const nm=this.peek();
+      const k2=this.peek(2);const looksFn=this.is(')',2)||(k2.t==='id'&&(this.isTypeWord(k2.v)||k2.v==='std'));
+      if(nm.t==='id'&&this.is('(',1)&&looksFn){
+        this.next();const params=this.params();
+        if(this.is(';')){this.next();continue}
+        const body=this.block();
+        funcs[nm.v]={name:nm.v,type,params,body,startLine:st.line,endLine:this.prev().line};items.push({kind:'func',name:nm.v,s:st.line,e:this.prev().line});
+      } else {globals.push(this.declRest(type,st));items.push({kind:'global',s:st.line,e:this.prev().line})}
+    }
+    return {funcs,globals,structs:this.structs,items};
+  }
+  structDef(){
+    this.next();const nm=this.next();this.structs.set(nm.v,{name:nm.v,fields:[]});this.eat('{');const fields=[];
+    while(!this.is('}')){
+      if(this.peek().t==='eof')this.err('القوس «}» ناقص',nm);
+      if((this.is('public')||this.is('private'))&&this.is(':',1)){this.p+=2;continue}
+      if(this.is(nm.v)&&this.is('(',1))this.err('الدوال (constructor) داخل struct غير مدعومة في المختبر، استخدمي التهيئة بالأقواس {}',this.peek());
+      if(!this.isTypeStart())this.err('داخل struct يُسمح بتعريف الحقول فقط',this.peek());
+      const st=this.peek();const type=this.parseType();
+      if(this.peek().t==='id'&&this.is('(',1))this.err('الدوال داخل struct غير مدعومة في المختبر',this.peek());
+      const d=this.declRest(type,st);for(const v of d.vars)fields.push({name:v.name,type,init:v.init,dims:v.dims});
+    }
+    this.next();this.eat(';');
+    this.structs.set(nm.v,{name:nm.v,fields});
+  }
+  params(){
+    this.eat('(');const ps=[];
+    if(this.is('void')&&this.is(')',1))this.next();
+    while(!this.is(')')){
+      const type=this.parseType();let ref=false;
+      while(this.is('&')){this.next();ref=true}
+      const nm=this.next();if(nm.t!=='id')this.err('اسم معامل غير صحيح',nm);
+      let arr=false;while(this.is('[')){this.next();if(!this.is(']'))this.expr();this.eat(']');arr=true}
+      ps.push({name:nm.v,type,ref:ref||arr});
+      if(this.is(','))this.next();else break;
+    }
+    this.eat(')');return ps;
+  }
+  declRest(type,st){
+    let ref=false;if(this.is('&')){this.next();ref=true}
+    if(this.is('[')){
+      this.next();const names=[];while(!this.is(']')){names.push(this.next().v);if(this.is(','))this.next()}this.eat(']');
+      this.eat('=');const init=this.assign();this.eat(';');return {k:'bind',names,ref,init,line:st.line};
+    }
+    const vars=[];
+    for(;;){
+      let vref=ref;if(this.is('&')){this.next();vref=true}
+      const nm=this.next();if(nm.t!=='id')this.err('كان متوقعًا اسم متغير',nm);
+      const dims=[];while(this.is('[')){this.next();dims.push(this.is(']')?null:this.expr());this.eat(']')}
+      let init=null,ctor=null;
+      if(this.is('=')){this.next();init=this.is('{')?this.braceList():this.assign()}
+      else if(this.is('(')){ctor=this.args()}
+      else if(this.is('{')){init=this.braceList()}
+      vars.push({name:nm.v,dims,init,ctor,ref:vref});
+      if(this.is(',')){this.next();continue}
+      break;
+    }
+    this.eat(';');
+    return {k:'decl',type,vars,line:st.line};
+  }
+  braceList(){const o=this.eat('{');const items=[];while(!this.is('}')){items.push(this.is('{')?this.braceList():this.assign());if(this.is(','))this.next();else break}const c=this.eat('}');return {k:'list',items,s:o.s,e:c.e}}
+  args(){this.eat('(');const a=[];while(!this.is(')')){a.push(this.is('{')?this.braceList():this.assign());if(this.is(','))this.next();else break}this.eat(')');return a}
+  block(){const o=this.eat('{');const stmts=[];while(!this.is('}')){if(this.peek().t==='eof')this.err('القوس «}» ناقص',o);stmts.push(this.stmt())}this.next();return {k:'block',stmts,line:o.line}}
+  stmt(){
+    const x=this.peek();
+    if(this.is('{'))return this.block();
+    if(this.is('if')){this.next();this.eat('(');const cond=this.expr();this.eat(')');const then=this.stmt();let els=null;if(this.is('else')){this.next();els=this.stmt()}return {k:'if',cond,then,els,line:x.line}}
+    if(this.is('while')){this.next();this.eat('(');const cond=this.expr();this.eat(')');return {k:'while',cond,body:this.stmt(),line:x.line}}
+    if(this.is('do')){this.next();const body=this.stmt();const w=this.eat('while');this.eat('(');const cond=this.expr();this.eat(')');this.eat(';');return {k:'do',body,cond,line:w.line}}
+    if(this.is('for')){this.next();this.eat('(');let init=null;
+      if(this.is(';'))this.next();
+      else if(this.isTypeStart()){
+        const save=this.p;const type=this.parseType();let ref=false;while(this.is('&')){this.next();ref=true}
+        let names=null;
+        if(this.is('[')){const s2=this.p;this.next();names=[];while(!this.is(']')&&this.peek().t!=='eof'){names.push(this.next().v);if(this.is(','))this.next()}this.next();if(!this.is(':')){names=null;this.p=s2}}
+        else if(this.peek().t==='id'&&this.is(':',1))names=[this.next().v];
+        if(names&&this.is(':')){this.next();const expr=this.expr();this.eat(')');const body=this.stmt();return {k:'rfor',type,ref,names,expr,body,line:x.line}}
+        this.p=save;const st=this.peek();init=this.declRest(this.parseType(),st);
+      }
+      else{init={k:'expr',expr:this.expr(),line:x.line};this.eat(';')}
+      const cond=this.is(';')?null:this.expr();this.eat(';');const step=this.is(')')?null:this.expr();this.eat(')');
+      return {k:'for',init,cond,step,body:this.stmt(),line:x.line}}
+    if(this.is('return')){this.next();const expr=this.is(';')?null:(this.is('{')?this.braceList():this.expr());this.eat(';');return {k:'return',expr,line:x.line}}
+    if(this.is('break')){this.next();this.eat(';');return {k:'break',line:x.line}}
+    if(this.is('continue')){this.next();this.eat(';');return {k:'continue',line:x.line}}
+    if(this.is(';')){this.next();return {k:'empty',line:x.line}}
+    if(this.isTypeStart()&&!(this.peek(1).t==='op'&&['{','(','::'].includes(this.peek(1).v)&&this.structs.has(this.peek().v)))return this.declRest(this.parseType(),x);
+    const expr=this.expr();this.eat(';');return {k:'expr',expr,line:x.line};
+  }
+  expr(){return this.assign()}
+  assign(){const l=this.tern();const x=this.peek();if(x.t==='op'&&ASSIGN.has(x.v)){this.next();const r=this.is('{')?this.braceList():this.assign();return {k:'assign',op:x.v,l,r,s:l.s,e:r.e}}return l}
+  tern(){const c=this.bin(0);if(this.is('?')){this.next();const a=this.assign();this.eat(':');const b=this.assign();return {k:'tern',c,a,b,s:c.s,e:b.e}}return c}
+  bin(lv){if(lv===LEVELS.length)return this.unary();let l=this.bin(lv+1);for(;;){const x=this.peek();if(x.t==='op'&&LEVELS[lv].includes(x.v)){this.next();const r=this.bin(lv+1);l={k:'bin',op:x.v,l,r,s:l.s,e:r.e}}else break}return l}
+  unary(){
+    const x=this.peek();
+    if(x.t==='op'&&['-','+','!','~','++','--','*','&'].includes(x.v)){this.next();const a=this.unary();return {k:'unary',op:x.v,x:a,s:x.s,e:a.e}}
+    if(this.is('(')&&this.peek(1).t==='id'&&this.isTypeWord(this.peek(1).v)){const save=this.p;this.next();try{const to=this.parseType();if(this.is(')')){this.next();const a=this.unary();return {k:'cast',to,x:a,s:x.s,e:a.e}}}catch(e){}this.p=save}
+    return this.postfix();
+  }
+  postfix(){
+    let x=this.primary();
+    for(;;){
+      if(this.is('(')&&x.k==='id'){const a=this.args();x={k:'call',name:x.name,args:a,s:x.s,e:this.prev().e};continue}
+      if(this.is('[')){this.next();const i=this.expr();const c=this.eat(']');x={k:'index',a:x,i,s:x.s,e:c.e};continue}
+      if(this.is('.')||this.is('->')){const arrow=this.next().v==='->';const obj=arrow?{k:'unary',op:'*',x,s:x.s,e:x.e}:x;const m=this.next();
+        if(this.is('(')){const a=this.args();x={k:'method',obj,name:m.v,args:a,s:x.s,e:this.prev().e}}else x={k:'member',obj,name:m.v,s:x.s,e:m.e};continue}
+      if(this.is('++')||this.is('--')){const o=this.next();x={k:'post',op:o.v,x,s:x.s,e:o.e};continue}
+      break;
+    }
+    return x;
+  }
+  primary(){
+    this.skipStd();const x=this.next();
+    if(x.t==='num')return {k:'num',v:x.v,fl:x.fl,s:x.s,e:x.e};
+    if(x.t==='str'){let s=x.v,e=x.e;while(this.peek().t==='str'){const y=this.next();s+=y.v;e=y.e}return {k:'str',v:s,s:x.s,e}}
+    if(x.t==='chr')return {k:'chr',v:x.v,s:x.s,e:x.e};
+    if(x.t==='op'&&x.v==='{'){this.p--;return this.braceList()}
+    if(x.t==='op'&&x.v==='['){
+      while(!this.is(']')&&this.peek().t!=='eof')this.next();this.next();
+      const params=this.is('(')?this.params():[];let type={kind:'auto'};
+      if(this.is('->')){this.next();type=this.parseType()}
+      const body=this.block();
+      return {k:'lambda',fn:{name:'lambda',params,body,type,startLine:x.line,endLine:this.prev().line},s:x.s,e:this.prev().e};
+    }
+    if(x.t==='id'){
+      if(x.v==='true'||x.v==='false')return {k:'num',v:x.v==='true'?1:0,bool:true,s:x.s,e:x.e};
+      if((x.v==='string'||x.v==='ios'||x.v==='std')&&this.is('::')){this.next();const y=this.next();if(y.v==='npos')return {k:'num',v:-1,s:x.s,e:y.e};return {k:'id',name:y.v,s:x.s,e:y.e}}
+      if((x.v==='greater'||x.v==='less')&&this.is('<')){this.next();this.parseType();this.closeAngle();if(this.is('(')){this.next();this.eat(')')}else if(this.is('{')){this.next();this.eat('}')}return {k:'cmpobj',g:x.v==='greater',s:x.s,e:this.prev().e}}
+      if(this.structs.has(x.v)&&this.is('{')){const l=this.braceList();return {k:'ctor',type:{kind:'struct',name:x.v},list:l,s:x.s,e:l.e}}
+      if(TEMPL.has(x.v)&&x.v!=='greater'&&x.v!=='less'&&this.is('<')){this.p--;const t=this.parseType();if(this.is('{')){const l=this.braceList();return {k:'ctor',type:t,list:l,s:x.s,e:l.e}}const a=this.is('(')?this.args():[];return {k:'tctor',type:t,args:a,s:x.s,e:this.prev().e}}
+      if(x.v==='string'&&this.is('(')){const a=this.args();return {k:'call',name:'__string',args:a,s:x.s,e:this.prev().e}}
+      return {k:'id',name:x.v,s:x.s,e:x.e};
+    }
+    if(x.t==='op'&&x.v==='('){const e=this.expr();this.eat(')');return e}
+    this.err(`لم أفهم «${x.v||'نهاية الملف'}»`,x);
+  }
+}
+
+/* ===================== interpreter ===================== */
+class Ret{constructor(v){this.v=v}} class Brk{} class Cont{}
+class RErr extends Error{constructor(m,line){super(m);this.line=line}}
+const COUT={stream:'out'},CIN={stream:'in'},ENDL={endl:true};
+const BUILTIN=new Set(['max','min','abs','sqrt','pow','swap','floor','ceil','sort','reverse','max_element','min_element','accumulate','count','find','fill',
+  'lower_bound','upper_bound','binary_search','make_pair','next','prev','distance','to_string','stoi','stoll','gcd','__gcd','tolower','toupper','isdigit','isalpha',
+  'getline','printf','scanf','sync_with_stdio','__string','iota','llabs','fabs','log2','log','exp','round']);
+let OBJ_ID=0;
+const isObj=v=>v!==null&&typeof v==='object';
+function mkVec(arr,of,ct='vector'){return {vec:true,ct,arr,of,id:++OBJ_ID,painted:new Set()}}
+function mkCont(ct,type){return {ct,arr:[],type,id:++OBJ_ID,painted:new Set()}}
+function mkObj(sname,fl){const m=new Map();for(const [n,t,v] of fl)m.set(n,{name:n,type:t,v});return {obj:true,sname,fields:m,id:++OBJ_ID}}
+function copyVal(v){
+  if(!isObj(v))return v;
+  if(v.vec)return mkVec(v.arr.map(copyVal),v.of,v.ct);
+  if(v.ct){const c=mkCont(v.ct,v.type);c.arr=v.arr.map(copyVal);return c}
+  if(v.obj)return mkObj(v.sname,[...v.fields.values()].map(b=>[b.name,b.type,copyVal(b.v)]));
+  return v;
+}
+function conv(type,v){
+  if(!type)return v;
+  if(isObj(v)&&v.list)v=v.list.length?v.list[0]:0;
+  if(isObj(v)&&!v.iter)return copyVal(v);
+  switch(type.kind){
+    case 'int':{if(typeof v==='string')v=v.length===1?v.charCodeAt(0):Number(v);if(v===undefined)return undefined;const r=Math.trunc(Number(v));return Number.isFinite(r)?r:0}
+    case 'double':return v===undefined?undefined:Number(typeof v==='string'&&v.length===1?v.charCodeAt(0):v);
+    case 'bool':return v===undefined?undefined:(truthy(v)?1:0);
+    case 'char':return typeof v==='number'?String.fromCharCode(v):v;
+    case 'string':return v==null?'':String(v);
+  }
+  return v;
+}
+function num(v){if(typeof v==='string')return v.length===1?v.charCodeAt(0):Number(v);if(v===undefined)return 0;if(isObj(v))return NaN;return Number(v)}
+function truthy(v){if(isObj(v))return true;return typeof v==='string'?v.length>0:!!num(v)}
+function fmt(v){
+  if(v===undefined)return '?';
+  if(isObj(v)){
+    if(v.obj){const vals=[...v.fields.values()].map(b=>fmt(b.v));return v.sname==='pair'?'('+vals.join(', ')+')':'{'+vals.join(', ')+'}'}
+    if(v.vec||v.ct)return '{'+v.arr.map(fmt).join(', ')+'}';
+    if(v.iter)return 'iterator';if(v.lambda)return 'λ';if(v.list)return '{'+v.list.map(fmt).join(', ')+'}';
+    return '';
+  }
+  if(typeof v==='number'&&!Number.isInteger(v))return String(+v.toFixed(6));
+  return String(v);
+}
+const keyStr=v=>fmt(v);
+function drain(gen){let r;while(!(r=gen.next()).done);return r.value}
+
+class Interp{
+  constructor(prog,src,input){
+    this.prog=prog;this.src=src;this.inRaw=input;this.inPos=0;this.out='';this.structs=prog.structs;
+    this.globals=new Map();this.frames=[];this.roots=[];this.reads=[];this.writes=[];this.changed=new Set();this.dups=[];
+    this.hl={reads:[],writes:[],changed:new Set(),dups:[]};this.calls=0;this.nodeSeq=0;this.frameSeq=0;this.ended=false;this.last=null;this.silent=0;
+    this.lineCache=null;this.structUse=new Set();this.fnUse=new Set();
+  }
+  /* ---------- driver ---------- */
+  *run(){
+    OBJ_ID=0;
+    for(const d of this.prog.globals)yield* this.stmtExec(d,null);
+    const main=this.prog.funcs.main;if(!main)throw new RErr('لا توجد دالة main',1);
+    const f=this.newFrame(main,null);this.frames.push(f);f.cur={line:main.startLine,kind:'enter'};
+    yield* this.pause('call');
+    try{yield* this.body(main.body,f)}catch(e){if(!(e instanceof Ret))throw e}
+    this.frames.pop();this.ended=true;
+    yield* this.pause('end');
+  }
+  newFrame(fn,parent){return {id:++this.frameSeq,fn,scopes:[new Map()],cur:{line:fn.startLine,kind:'enter'},marks:{},badges:[],active:null,node:null,ret:undefined,parent,closure:null}}
+  *pause(kind){
+    if(this.silent)return;
+    const top=this.frames[this.frames.length-1];
+    this.last=top?{f:top,line:top.cur.line}:null;
+    this.hl={reads:this.reads,writes:this.writes,changed:this.changed,dups:this.dups,structs:this.structUse,fns:this.fnUse};
+    this.reads=[];this.writes=[];this.changed=new Set();this.dups=[];this.structUse=new Set();this.fnUse=new Set();
+    yield kind;
+  }
+  lineOf(x){
+    if(!this.lineCache){this.lineCache=[0];for(let i=0;i<this.src.length;i++)if(this.src.charCodeAt(i)===10)this.lineCache.push(i+1)}
+    const a=this.lineCache;let lo=0,hi=a.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(a[m]<=x.s)lo=m;else hi=m-1}return lo+1;
+  }
+  lookup(name,f,line){
+    for(let fr=f;fr;fr=fr.closure)for(let i=fr.scopes.length-1;i>=0;i--){const b=fr.scopes[i].get(name);if(b)return b}
+    const g=this.globals.get(name);if(g)return g;
+    throw new RErr(`المتغير «${name}» غير معرّف`,line);
+  }
+  tryLookup(name,f){try{return this.lookup(name,f)}catch(e){return null}}
+  /* ---------- types & values ---------- */
+  makeDefault(t,zero){
+    switch(t.kind){
+      case 'vector':case 'deque':return mkVec([],t.of,t.kind);
+      case 'queue':case 'stack':case 'pq':case 'set':case 'map':return mkCont(t.kind,t);
+      case 'pair':return mkObj('pair',[['first',t.a,this.makeDefault(t.a,true)],['second',t.b,this.makeDefault(t.b,true)]]);
+      case 'struct':{const d=this.structs.get(t.name);if(!this.peeking)this.structUse.add(t.name);return mkObj(t.name,d.fields.map(fd=>{
+        let v;
+        if(fd.dims&&fd.dims.length){const n=num(drain(this.eval(fd.dims[0],null)));v=mkVec(Array.from({length:n},()=>this.makeDefault(fd.type,true)),fd.type,'array')}
+        else if(fd.init)v=this.build(fd.type,drain(this.eval(fd.init,null)));
+        else v=this.makeDefault(fd.type,zero);
+        return [fd.name,fd.type,v]}))}
+      case 'string':return '';
+      case 'char':return zero?'\0':undefined;
+      default:return zero?0:undefined;
+    }
+  }
+  build(t,v){
+    if(!t||t.kind==='auto'){if(isObj(v)&&v.list)return mkVec(v.list.map(x=>this.build(null,x)),{kind:'auto'});return copyVal(v)}
+    const L=isObj(v)&&v.list?v.list:null;
+    switch(t.kind){
+      case 'vector':case 'deque':{
+        if(L)return mkVec(L.map(x=>this.build(t.of,x)),t.of,t.kind);
+        if(isObj(v)&&v.vec){const c=copyVal(v);c.of=t.of;c.ct=t.kind;return c}
+        throw new RErr('لا يمكن تحويل هذه القيمة إلى vector')}
+      case 'set':{const c=mkCont('set',t);const src=L||(isObj(v)&&v.arr)||[];for(const x of src)this.setInsert(c,this.build(t.of,x),true);return c}
+      case 'map':{const c=mkCont('map',t);
+        if(L){for(const it of L){const pr=isObj(it)&&it.list?it.list:[it.fields.get('first').v,it.fields.get('second').v];this.mapPut(c,this.build(t.k,pr[0]),this.build(t.v,pr[1]),true)}}
+        else if(isObj(v)&&v.ct==='map'){for(const e of v.arr)this.mapPut(c,copyVal(e.fields.get('first').v),copyVal(e.fields.get('second').v),true)}
+        return c}
+      case 'queue':case 'stack':case 'pq':{if(isObj(v)&&v.ct===t.kind)return copyVal(v);const c=mkCont(t.kind,t);if(L)for(const x of L)this.cpush(c,this.build(t.of,x));return c}
+      case 'pair':{
+        if(L)return mkObj('pair',[['first',t.a,this.build(t.a,L[0])],['second',t.b,this.build(t.b,L[1])]]);
+        if(isObj(v)&&v.obj){const fl=[...v.fields.values()];return mkObj('pair',[['first',t.a,this.build(t.a,fl[0].v)],['second',t.b,this.build(t.b,fl[1].v)]])}
+        throw new RErr('لا يمكن تحويل هذه القيمة إلى pair')}
+      case 'struct':{
+        const d=this.structs.get(t.name);
+        if(L){const o=this.makeDefault(t,true);d.fields.forEach((fd,i)=>{if(i<L.length)o.fields.get(fd.name).v=this.build(fd.type,L[i])});return o}
+        if(isObj(v)&&v.obj)return copyVal(v);
+        throw new RErr(`لا يمكن تحويل هذه القيمة إلى ${t.name}`)}
+      default:return conv(t,v);
+    }
+  }
+  cmpVal(a,b){
+    if(isObj(a)&&a.obj&&isObj(b)&&b.obj){const fb=[...b.fields.values()];let i=0;for(const fa of a.fields.values()){const c=this.cmpVal(fa.v,fb[i++].v);if(c)return c}return 0}
+    if(typeof a==='string'&&typeof b==='string')return a<b?-1:a>b?1:0;
+    const x=num(a),y=num(b);return x<y?-1:x>y?1:0;
+  }
+  setFind(c,v){for(let i=0;i<c.arr.length;i++)if(this.cmpVal(c.arr[i],v)===0)return i;return -1}
+  setInsert(c,v,quiet){
+    const multi=c.type.multi;
+    if(!multi&&this.setFind(c,v)>=0){if(!quiet)this.dups.push({id:c.id,key:keyStr(v)});return false}
+    let i=c.arr.length;if(c.type.ordered){i=0;while(i<c.arr.length&&this.cmpVal(c.arr[i],v)<=0)i++}
+    c.arr.splice(i,0,v);if(!quiet)this.writes.push({id:c.id,key:keyStr(v),created:true});return true;
+  }
+  mapFind(c,k){for(let i=0;i<c.arr.length;i++)if(this.cmpVal(c.arr[i].fields.get('first').v,k)===0)return i;return -1}
+  mapPut(c,k,v,quiet){
+    const e=mkObj('pair',[['first',c.type.k,k],['second',c.type.v,v]]);
+    let i=c.arr.length;if(c.type.ordered){i=0;while(i<c.arr.length&&this.cmpVal(c.arr[i].fields.get('first').v,k)<0)i++}
+    c.arr.splice(i,0,e);if(!quiet)this.writes.push({id:c.id,key:keyStr(k),created:true});return e;
+  }
+  cpush(c,v){
+    if(c.ct==='pq'){const g=c.type.greater;let i=0;while(i<c.arr.length&&(g?this.cmpVal(c.arr[i],v)<=0:this.cmpVal(c.arr[i],v)>=0))i++;c.arr.splice(i,0,v);this.writes.push({id:c.id,i,created:true});return}
+    c.arr.push(v);this.writes.push({id:c.id,i:c.arr.length-1,created:true});
+  }
+  peekVal(x,f){
+    if(this.hasCall(x))return undefined;
+    const r=this.reads.length,w=this.writes.length,d=this.dups.length,ch=new Set(this.changed);this.silent++;this.peeking=(this.peeking||0)+1;let v;
+    try{v=drain(this.eval(x,f))}catch(e){v=undefined}finally{this.silent--;this.peeking--;this.reads.length=r;this.writes.length=w;this.dups.length=d;this.changed=ch}
+    return v;
+  }
+  isStr(x,f){
+    if(!x)return false;
+    switch(x.k){
+      case 'str':return true;
+      case 'id':{const b=this.tryLookup(x.name,f);return !!b&&(b.type.kind==='string'||(typeof b.v==='string'&&b.v.length!==1))}
+      case 'member':{const o=this.peekVal(x.obj,f);const b=isObj(o)&&o.obj&&o.fields.get(x.name);return !!b&&b.type.kind==='string'}
+      case 'index':{const a=this.peekVal(x.a,f);if(isObj(a)&&a.vec)return !!a.of&&a.of.kind==='string';if(isObj(a)&&a.ct==='map')return a.type.v.kind==='string';return false}
+      case 'call':{const fn=this.prog.funcs[x.name];if(fn)return fn.type.kind==='string';return x.name==='to_string'||x.name==='__string'}
+      case 'method':return ['substr','front','back','top'].includes(x.name)&&x.name==='substr';
+      case 'bin':return x.op==='+'&&(this.isStr(x.l,f)||this.isStr(x.r,f));
+      case 'tern':return this.isStr(x.a,f)||this.isStr(x.b,f);
+      case 'assign':return this.isStr(x.l,f);
+    }
+    return false;
+  }
+  isFloat(x,f){
+    switch(x.k){case 'num':return !!x.fl;case 'id':{const b=this.tryLookup(x.name,f);return !!b&&b.type.kind==='double'}
+      case 'bin':return this.isFloat(x.l,f)||this.isFloat(x.r,f);case 'unary':return this.isFloat(x.x,f);
+      case 'cast':return x.to.kind==='double';case 'call':return (this.prog.funcs[x.name]&&this.prog.funcs[x.name].type.kind==='double')||['sqrt','pow','fabs','log2','log','exp'].includes(x.name);
+      case 'member':{const o=this.peekVal(x.obj,f);const b=isObj(o)&&o.obj&&o.fields.get(x.name);return !!b&&b.type.kind==='double'}
+      case 'index':{const a=this.peekVal(x.a,f);return !!(isObj(a)&&a.vec&&a.of&&a.of.kind==='double')}
+      case 'tern':return this.isFloat(x.a,f)||this.isFloat(x.b,f);}
+    return false;
+  }
+  hasCall(x){
+    if(!x||typeof x!=='object')return false;
+    if(x.k==='call'&&!BUILTIN.has(x.name))return true;
+    if(x.k==='lambda')return false;
+    for(const k in x){const v=x[k];if(k==='s'||k==='e')continue;if(Array.isArray(v)){if(v.some(y=>this.hasCall(y)))return true}else if(v&&typeof v==='object'&&v.k&&this.hasCall(v))return true}
+    return false;
+  }
+  hasIndex(x){if(!x||typeof x!=='object')return false;if(x.k==='index')return true;for(const k in x){const v=x[k];if(v&&typeof v==='object'&&v.k&&this.hasIndex(v))return true}return false}
+  /* ---------- statements ---------- */
+  begin(f,line,kind='stmt'){f.badges=[];f.cur={line,kind}}
+  *body(block,f){for(const s of block.stmts)yield* this.stmt(s,f)}
+  *stmtExec(st,f){
+    if(st.k==='decl')yield* this.decl(st,f);
+    else if(st.k==='bind')yield* this.bind(st,f);
+    else yield* this.eval(st.expr,f);
+  }
+  *stmt(st,f){
+    switch(st.k){
+      case 'block':f.scopes.push(new Map());try{for(const s of st.stmts)yield* this.stmt(s,f)}finally{f.scopes.pop()}return;
+      case 'empty':return;
+      case 'if':{this.begin(f,st.line);if(this.hasCall(st.cond))yield* this.pause('stmt');
+        const c=truthy(yield* this.eval(st.cond,f));f.marks[st.line]=c;f.cur={line:st.line,kind:c?'true':'false'};yield* this.pause('cond');
+        if(c)yield* this.stmt(st.then,f);else if(st.els)yield* this.stmt(st.els,f);return}
+      case 'while':case 'for':case 'do':{
+        if(st.k==='for'){f.scopes.push(new Map())}
+        try{
+          if(st.k==='for'&&st.init)yield* this.stmt(st.init,f);
+          let first=true;
+          for(;;){
+            if(!(st.k==='do'&&first)&&st.cond){
+              this.begin(f,st.line);if(this.hasCall(st.cond))yield* this.pause('stmt');
+              const c=truthy(yield* this.eval(st.cond,f));f.marks[st.line]=c;f.cur={line:st.line,kind:c?'true':'false'};yield* this.pause('cond');
+              if(!c)break;
+            }
+            first=false;
+            try{yield* this.stmt(st.body,f)}catch(e){if(e instanceof Brk)break;if(!(e instanceof Cont))throw e}
+            if(st.k==='for'&&st.step)yield* this.eval(st.step,f);
+          }
+        }finally{if(st.k==='for')f.scopes.pop()}
+        return}
+      case 'rfor':return yield* this.rangeFor(st,f);
+      case 'return':{
+        const calls=this.hasCall(st.expr);
+        const sameLine=this.last&&this.last.f===f&&this.last.line===st.line;
+        if(!sameLine||calls)this.begin(f,st.line);
+        if(calls)yield* this.pause('stmt');
+        let v=st.expr?yield* this.eval(st.expr,f):undefined;
+        if(f.fn.type.kind!=='void')v=this.build(f.fn.type,v);
+        f.ret=v;
+        if(f.node&&f.node.children.length===0&&this.hasIndex(st.expr))f.node.memo=true;
+        if(!(sameLine&&!calls)){f.cur={line:st.line,kind:'ret'};yield* this.pause('ret')}
+        throw new Ret(v)}
+      case 'break':this.begin(f,st.line);yield* this.pause('stmt');throw new Brk();
+      case 'continue':this.begin(f,st.line);yield* this.pause('stmt');throw new Cont();
+      case 'decl':case 'expr':case 'bind':{
+        this.begin(f,st.line);
+        const calls=st.k==='expr'?this.hasCall(st.expr):st.k==='bind'?this.hasCall(st.init):st.vars.some(v=>this.hasCall(v.init)||(v.ctor||[]).some(a=>this.hasCall(a)));
+        if(calls)yield* this.pause('stmt');
+        yield* this.stmtExec(st,f);
+        f.cur={line:st.line,kind:'stmt'};yield* this.pause(calls?'done':'stmt');return}
+    }
+  }
+  *rangeFor(st,f){
+    this.begin(f,st.line);
+    let c=yield* this.eval(st.expr,f);
+    if(isObj(c)&&c.list)c=this.build(null,c);
+    const isS=typeof c==='string';
+    if(!isS&&!(isObj(c)&&(c.vec||c.ct==='set'||c.ct==='map')))throw new RErr('لا يمكن المرور على هذا النوع بحلقة for (مثل queue و stack)',st.line);
+    const n=isS?c.length:c.arr.length;let broke=false;
+    for(let k=0;k<n;k++){
+      if(!isS&&k>=c.arr.length)break;
+      f.scopes.push(new Map());
+      try{
+        const el=isS?c[k]:c.arr[k];
+        if(isS&&st.expr.k==='id'){const sb=this.tryLookup(st.expr.name,f);if(sb)this.reads.push({sbox:sb,i:k})}
+        if(!isS){if(c.ct==='map')this.reads.push({id:c.id,key:keyStr(el.fields.get('first').v)});else if(c.ct==='set')this.reads.push({id:c.id,key:keyStr(el)});else this.reads.push({id:c.id,i:k})}
+        const sc=f.scopes[f.scopes.length-1];
+        if(st.names.length>1){
+          if(!isObj(el)||!el.obj)throw new RErr('التفكيك [a, b] يحتاج pair أو struct',st.line);
+          const fl=[...el.fields.values()];
+          st.names.forEach((nm,j)=>{const fb=fl[j];if(!fb)return;const b=st.ref?fb:{name:nm,type:fb.type,v:copyVal(fb.v)};sc.set(nm,b);this.changed.add(b)});
+        } else {
+          let box;const nm=st.names[0];
+          if(st.ref&&!isS&&c.vec){const arr=c,idx=k,self=this;box={name:nm,type:c.of||st.type,get v(){return arr.arr[idx]},set v(val){arr.arr[idx]=val;arr.painted.add(idx);self.writes.push({id:arr.id,i:idx})}}}
+          else if(st.ref&&isObj(el))box={name:nm,type:st.type.kind==='auto'?{kind:'auto'}:st.type,v:el};
+          else box={name:nm,type:st.type.kind==='auto'?{kind:isS?'char':'auto'}:st.type,v:this.build(st.type.kind==='auto'?null:st.type,el)};
+          sc.set(nm,box);this.changed.add(box);
+        }
+        f.marks[st.line]=true;f.cur={line:st.line,kind:'true'};yield* this.pause('cond');
+        try{yield* this.stmt(st.body,f)}catch(e){if(e instanceof Brk)broke=true;else if(!(e instanceof Cont))throw e}
+      }finally{f.scopes.pop()}
+      if(broke)break;
+      this.begin(f,st.line);
+    }
+    if(!broke){f.marks[st.line]=false;f.cur={line:st.line,kind:'false'};yield* this.pause('cond')}
+  }
+  *bind(st,f){
+    const scope=f?f.scopes[f.scopes.length-1]:this.globals;
+    const o=yield* this.eval(st.init,f);
+    if(!isObj(o)||!o.obj)throw new RErr('التفكيك [a, b] يحتاج pair أو struct',st.line);
+    const fl=[...o.fields.values()];
+    st.names.forEach((nm,j)=>{const fb=fl[j];if(!fb)return;const b=st.ref?fb:{name:nm,type:fb.type,v:copyVal(fb.v)};scope.set(nm,b);this.changed.add(b)});
+  }
+  *decl(st,f){
+    const scope=f?f.scopes[f.scopes.length-1]:this.globals;
+    for(const d of st.vars){
+      let box;const t=st.type;
+      if(d.ref&&d.init){
+        const r=yield* this.lval(d.init,f);
+        box=r.box?r.box:r.proxy?r.proxy(d.name):{name:d.name,type:t,v:r.get()};
+        scope.set(d.name,box);this.changed.add(box);continue;
+      }
+      if(d.dims.length){
+        const sizes=[];for(const e of d.dims)sizes.push(e?num(yield* this.eval(e,f)):null);
+        let lst=null;if(d.init&&d.init.k==='list'){lst=yield* this.eval(d.init,f)}
+        const zero=!f||!!lst;
+        const mk=(k,l)=>{const L=l&&l.list;const n=sizes[k]??(L?L.length:0);const arr=[];
+          for(let i=0;i<n;i++){if(k<sizes.length-1)arr.push(mk(k+1,L&&isObj(L[i])&&L[i].list?L[i]:null));else arr.push(L&&i<L.length?this.build(t,L[i]):this.makeDefault(t,zero))}
+          return mkVec(arr,k<sizes.length-1?{kind:'vector',of:t}:t,'array')};
+        box={name:d.name,type:{kind:'vector',of:t,carr:true},v:mk(0,lst)};
+      } else if(t.kind==='vector'||t.kind==='deque'){
+        let v;
+        if(d.ctor&&d.ctor.length){const n=num(yield* this.eval(d.ctor[0],f));const fillV=d.ctor[1]?yield* this.eval(d.ctor[1],f):undefined;v=mkVec([],t.of,t.kind);for(let i=0;i<n;i++)v.arr.push(fillV===undefined?this.makeDefault(t.of,true):this.build(t.of,fillV))}
+        else if(d.init)v=this.build(t,yield* this.eval(d.init,f));
+        else v=this.makeDefault(t,!f);
+        box={name:d.name,type:t,v};
+      } else {
+        let v;
+        if(d.init)v=this.build(t,yield* this.eval(d.init,f));
+        else if(d.ctor&&d.ctor.length){
+          if(t.kind==='string'&&d.ctor.length===2){const n=num(yield* this.eval(d.ctor[0],f));const ch=yield* this.eval(d.ctor[1],f);v=String(ch).repeat(n)}
+          else if(t.kind==='pair'||t.kind==='struct'){const vals=[];for(const a of d.ctor)vals.push(yield* this.eval(a,f));v=this.build(t,{list:vals})}
+          else v=this.build(t,yield* this.eval(d.ctor[0],f));
+        }
+        else v=this.makeDefault(t,!f);
+        if(t.kind==='auto'&&v===undefined)throw new RErr('المتغير من نوع auto يحتاج قيمة ابتدائية',st.line);
+        box={name:d.name,type:t.kind==='auto'?this.autoType(v):t,v};
+      }
+      scope.set(d.name,box);this.changed.add(box);
+    }
+  }
+  autoType(v){if(typeof v==='string')return v.length===1?{kind:'char'}:{kind:'string'};if(typeof v==='number')return Number.isInteger(v)?{kind:'int'}:{kind:'double'};return {kind:'auto'}}
+  binop(op,a,b,fl,line,strCat){
+    if(isObj(a)&&a.vec&&typeof b==='number'&&(op==='+'||op==='-'))return {iter:true,c:a,i:op==='+'?b:-b};
+    if(isObj(a)&&a.iter||isObj(b)&&b.iter){
+      if(op==='=='||op==='!=')return ((isObj(a)&&isObj(b)&&a.iter&&b.iter&&a.c===b.c&&a.i===b.i)===(op==='=='))?1:0;
+      if(isObj(a)&&a.iter&&(op==='+'||op==='-')&&!(isObj(b)&&b.iter))return {iter:true,c:a.c,i:a.i+(op==='+'?1:-1)*num(b),rev:a.rev};
+      if(isObj(a)&&a.iter&&isObj(b)&&b.iter&&op==='-')return a.i-b.i;
+      if(op==='<')return a.i<b.i?1:0;
+      throw new RErr(`العملية «${op}» على iterator غير مدعومة`,line);
+    }
+    if(op==='+'&&(strCat||(typeof a==='string'&&a.length!==1)||(typeof b==='string'&&b.length!==1)))return String(a??'')+String(b??'');
+    if(isObj(a)&&isObj(b)&&['==','!=','<','<=','>','>='].includes(op)){const c=this.cmpVal(a,b);return ({'==':c===0,'!=':c!==0,'<':c<0,'<=':c<=0,'>':c>0,'>=':c>=0})[op]?1:0}
+    if(typeof a==='string'&&typeof b==='string'&&['==','!=','<','<=','>','>='].includes(op)){const c=a<b?-1:a>b?1:0;return ({'==':c===0,'!=':c!==0,'<':c<0,'<=':c<=0,'>':c>0,'>=':c>=0})[op]?1:0}
+    const x=num(a),y=num(b);
+    switch(op){
+      case '+':return x+y;case '-':return x-y;case '*':return x*y;
+      case '/':if(y===0&&!fl)throw new RErr('قسمة على صفر',line);return fl?x/y:Math.trunc(x/y);
+      case '%':if(y===0)throw new RErr('باقي قسمة على صفر',line);return x%y;
+      case '<':return x<y?1:0;case '<=':return x<=y?1:0;case '>':return x>y?1:0;case '>=':return x>=y?1:0;
+      case '==':return x===y?1:0;case '!=':return x!==y?1:0;
+      case '&':return x&y;case '|':return x|y;case '^':return x^y;case '<<':return x*Math.pow(2,y);case '>>':return Math.floor(x/Math.pow(2,y));
+    }
+    throw new RErr(`العملية «${op}» غير مدعومة`,line);
+  }
+  /* ---------- lvalues ---------- */
+  boxRef(b){const self=this;return {box:b,get:()=>b.v,set:v=>{b.v=(b.type.carr)?v:this.build(b.type.kind==='auto'?null:b.type,v);self.changed.add(b)},type:b.type}}
+  elemRef(c,i){
+    const self=this;
+    return {get:()=>{self.reads.push({id:c.id,i});return c.arr[i]},
+      set:v=>{c.arr[i]=(c.of&&c.of.kind!=='auto')?this.build(c.of,v):copyVal(v);c.painted.add(i);self.writes.push({id:c.id,i})},
+      type:c.of,proxy:nm=>({name:nm,type:c.of||{kind:'auto'},get v(){return c.arr[i]},set v(val){c.arr[i]=val;c.painted.add(i);self.writes.push({id:c.id,i})}})};
+  }
+  *lval(x,f){
+    const line=this.lineOf(x);
+    if(x.k==='id'){const b=this.lookup(x.name,f,line);return this.boxRef(b)}
+    if(x.k==='index'){
+      const a=yield* this.eval(x.a,f);
+      if(typeof a==='string'){
+        const pr=yield* this.lval(x.a,f);const i=num(yield* this.eval(x.i,f));
+        if(i<0||i>=a.length)throw new RErr(`الفهرس ${i} خارج حدود النص (الطول ${a.length})`,line);
+        const self=this;
+        return {get:()=>{self.reads.push({sbox:pr.box,i});return pr.get()[i]},set:v=>{const s=pr.get();pr.set(s.slice(0,i)+conv({kind:'char'},v)+s.slice(i+1));self.writes.push({sbox:pr.box,i})},type:{kind:'char'}};
+      }
+      if(isObj(a)&&a.ct==='map'){
+        const k=this.build(a.type.k,yield* this.eval(x.i,f));const ks=keyStr(k);
+        let idx=this.mapFind(a,k);
+        if(idx<0){if(this.peeking)throw new RErr('peek');this.mapPut(a,k,this.makeDefault(a.type.v,true));idx=this.mapFind(a,k)}
+        const box=a.arr[idx].fields.get('second');const self=this;
+        return {box,get:()=>{self.reads.push({id:a.id,key:ks});return box.v},set:v=>{box.v=this.build(a.type.v,v);self.writes.push({id:a.id,key:ks});self.changed.add(box)},type:a.type.v};
+      }
+      const i=num(yield* this.eval(x.i,f));
+      if(!isObj(a)||!a.vec)throw new RErr('الفهرسة [ ] تحتاج مصفوفة أو vector أو map',line);
+      if(i<0||i>=a.arr.length||!Number.isInteger(i))throw new RErr(`الفهرس ${i} خارج حدود المصفوفة (الحجم ${a.arr.length})`,line);
+      return this.elemRef(a,i);
+    }
+    if(x.k==='member'){
+      const o=yield* this.eval(x.obj,f);
+      if(!isObj(o)||!o.obj)throw new RErr(`لا يوجد حقل «${x.name}» هنا`,line);
+      const b=o.fields.get(x.name);if(!b)throw new RErr(`لا يوجد حقل باسم «${x.name}» في ${o.sname}`,line);
+      if(o.sname!=='pair'&&!this.peeking)this.structUse.add(o.sname);
+      const self=this;
+      return {box:b,get:()=>{self.reads.push({fbox:b});return b.v},set:v=>{b.v=this.build(b.type.kind==='auto'?null:b.type,v);self.changed.add(b)},type:b.type};
+    }
+    if(x.k==='unary'&&x.op==='*'){
+      const it=yield* this.eval(x.x,f);
+      if(!isObj(it)||!it.iter)throw new RErr('النجمة * تعمل هنا مع iterator فقط',line);
+      return this.iterRef(it,line);
+    }
+    if(x.k==='unary'&&(x.op==='++'||x.op==='--')){const r=yield* this.lval(x.x,f);r.set(this.inc(r.get(),x.op==='++'?1:-1));return r}
+    throw new RErr('لا يمكن الإسناد إلى هذا التعبير',line);
+  }
+  iterRef(it,line){
+    const c=it.c;
+    if(c.strref){const s=c.strref.get();if(it.i<0||it.i>=s.length)throw new RErr('لا يمكن الوصول إلى end()',line);const pr=c.strref,i=it.i;return {get:()=>pr.get()[i],set:v=>{const s2=pr.get();pr.set(s2.slice(0,i)+conv({kind:'char'},v)+s2.slice(i+1))},type:{kind:'char'}}}
+    if(it.i<0||it.i>=c.arr.length)throw new RErr('لا يمكن الوصول إلى end() أو قيمة خارج الحاوية',line);
+    if(c.vec)return this.elemRef(c,it.i);
+    const el=c.arr[it.i];const self=this;
+    if(c.ct==='map'){this.reads.push({id:c.id,key:keyStr(el.fields.get('first').v)});return {get:()=>el,set:()=>{throw new RErr('لا يمكن تغيير عنصر map مباشرة',line)},type:{kind:'pair'}}}
+    if(c.ct==='set'){this.reads.push({id:c.id,key:keyStr(el)});return {get:()=>el,set:()=>{throw new RErr('عناصر set لا يمكن تعديلها',line)},type:c.type.of}}
+    return {get:()=>{self.reads.push({id:c.id,i:it.i});return el},set:()=>{},type:null};
+  }
+  inc(v,d){if(isObj(v)&&v.iter)return {iter:true,c:v.c,i:v.i+(v.rev?-d:d),rev:v.rev};if(typeof v==='string'&&v.length===1)return String.fromCharCode(v.charCodeAt(0)+d);return num(v)+d}
+  /* ---------- expressions ---------- */
+  *eval(x,f){
+    switch(x.k){
+      case 'num':return x.v;
+      case 'str':return x.v;
+      case 'chr':return x.v;
+      case 'list':{const l=[];for(const it of x.items)l.push(yield* this.eval(it,f));return {list:l}}
+      case 'lambda':return {lambda:true,fn:x.fn,closure:f};
+      case 'cmpobj':return {cmp:x.g?'greater':'less'};
+      case 'ctor':return this.build(x.type,yield* this.eval(x.list,f));
+      case 'tctor':{const vals=[];for(const a of x.args)vals.push(yield* this.eval(a,f));const t=x.type;
+        if((t.kind==='vector'||t.kind==='deque')&&vals.length){const v=mkVec([],t.of,t.kind);for(let i=0;i<num(vals[0]);i++)v.arr.push(vals.length>1?this.build(t.of,vals[1]):this.makeDefault(t.of,true));return v}
+        if(t.kind==='pair')return this.build(t,{list:vals});return this.makeDefault(t,true)}
+      case 'id':{
+        if(x.name==='cout')return COUT;if(x.name==='cin')return CIN;if(x.name==='endl')return ENDL;
+        if(x.name==='NULL'||x.name==='nullptr')return 0;
+        if(x.name==='INT_MAX')return 2147483647;if(x.name==='INT_MIN')return -2147483648;if(x.name==='LLONG_MAX'||x.name==='LONG_LONG_MAX')return 9007199254740991;if(x.name==='LLONG_MIN')return -9007199254740991;
+        const b=this.tryLookup(x.name,f);if(b)return b.v;
+        if(this.prog.funcs[x.name])return {lambda:true,fn:this.prog.funcs[x.name],closure:null};
+        throw new RErr(`المتغير «${x.name}» غير معرّف`,this.lineOf(x))}
+      case 'index':case 'member':{const r=yield* this.lval(x,f);return r.get()}
+      case 'assign':{
+        const r=yield* this.lval(x.l,f);let v=yield* this.eval(x.r,f);
+        if(x.op!=='='){const cur=r.get();const strCat=x.op==='+='&&(typeof cur==='string'&&(r.type&&r.type.kind==='string'||cur.length!==1));
+          v=this.binop(x.op.slice(0,-1),cur,v,this.isFloat(x.l,f)||this.isFloat(x.r,f),this.lineOf(x),strCat)}
+        r.set(v);return r.get()}
+      case 'tern':{const c=truthy(yield* this.eval(x.c,f));return yield* this.eval(c?x.a:x.b,f)}
+      case 'bin':{
+        if(x.op==='&&'){const a=truthy(yield* this.eval(x.l,f));if(!a)return 0;return truthy(yield* this.eval(x.r,f))?1:0}
+        if(x.op==='||'){const a=truthy(yield* this.eval(x.l,f));if(a)return 1;return truthy(yield* this.eval(x.r,f))?1:0}
+        const a=yield* this.eval(x.l,f);
+        if(x.op==='<<'&&a===COUT){const v=yield* this.eval(x.r,f);this.out+=v===ENDL?'\n':fmt(v);return COUT}
+        if(x.op==='>>'&&a===CIN){const r=yield* this.lval(x.r,f);const tok=this.readTok();if(tok===null)throw new RErr('المدخلات انتهت: أضيفي قيمة في مربع المدخلات',this.lineOf(x));const t=r.type||{kind:'int'};r.set(t.kind==='string'?tok:t.kind==='char'?tok[0]:Number(tok));return CIN}
+        const b=yield* this.eval(x.r,f);
+        const strCat=x.op==='+'&&(this.isStr(x.l,f)||this.isStr(x.r,f));
+        return this.binop(x.op,a,b,this.isFloat(x,f),this.lineOf(x),strCat)}
+      case 'unary':{
+        if(x.op==='++'||x.op==='--'){const r=yield* this.lval(x.x,f);r.set(this.inc(r.get(),x.op==='++'?1:-1));return r.get()}
+        if(x.op==='*'){const r=yield* this.lval(x,f);return r.get()}
+        if(x.op==='&')return {ref:yield* this.lval(x.x,f)};
+        const v=yield* this.eval(x.x,f);
+        if(x.op==='-')return -num(v);if(x.op==='+')return num(v);if(x.op==='!')return truthy(v)?0:1;if(x.op==='~')return ~num(v)}
+      case 'post':{const r=yield* this.lval(x.x,f);const old=r.get();r.set(this.inc(old,x.op==='++'?1:-1));return old}
+      case 'cast':return conv(x.to,yield* this.eval(x.x,f));
+      case 'call':return yield* this.call(x,f);
+      case 'method':return yield* this.method(x,f);
+    }
+    throw new RErr('تعبير غير مدعوم',this.lineOf(x));
+  }
+  readTok(){const s=this.inRaw;let i=this.inPos;while(i<s.length&&/\s/.test(s[i]))i++;if(i>=s.length){this.inPos=i;return null}let j=i;while(j<s.length&&!/\s/.test(s[j]))j++;this.inPos=j;return s.slice(i,j)}
+  readLine(){const s=this.inRaw;if(this.inPos>=s.length)return null;let j=s.indexOf('\n',this.inPos);if(j<0)j=s.length;const r=s.slice(this.inPos,j).replace(/\r$/,'');this.inPos=j+1;return r}
+  /* ---------- methods ---------- */
+  *method(x,f){
+    const line=this.lineOf(x);const nm=x.name;
+    let o=yield* this.eval(x.obj,f);
+    if(o===CIN||o===COUT){const a=[];for(const e of x.args)a.push(yield* this.eval(e,f));return o}
+    if(typeof o==='string')return yield* this.strMethod(x,f,o,line);
+    if(!isObj(o)||!(o.vec||o.ct))throw new RErr(`لا يمكن استدعاء ${nm} هنا`,line);
+    const args=[];for(const a of x.args)args.push(yield* this.eval(a,f));
+    const it=i=>({iter:true,c:o,i});
+    if(nm==='size')return o.arr.length;
+    if(nm==='empty')return o.arr.length?0:1;
+    if(nm==='clear'){o.arr=[];o.painted.clear();return}
+    if(nm==='begin')return it(0);if(nm==='end')return it(o.arr.length);
+    if(nm==='rbegin')return {iter:true,c:o,i:o.arr.length-1,rev:true};if(nm==='rend')return {iter:true,c:o,i:-1,rev:true};
+    const one=()=>args.length>1?{list:args}:args[0];
+    if(o.vec){
+      const of=o.of||{kind:'auto'};const B=v=>this.build(of.kind==='auto'?null:of,v);
+      switch(nm){
+        case 'push_back':case 'emplace_back':o.arr.push(B(one()));o.painted.add(o.arr.length-1);this.writes.push({id:o.id,i:o.arr.length-1,created:true});return;
+        case 'push_front':case 'emplace_front':o.arr.unshift(B(one()));o.painted=new Set([...o.painted].map(i=>i+1));o.painted.add(0);this.writes.push({id:o.id,i:0,created:true});return;
+        case 'pop_back':if(!o.arr.length)throw new RErr('pop_back على vector فارغ',line);o.arr.pop();return;
+        case 'pop_front':if(!o.arr.length)throw new RErr('pop_front على deque فارغ',line);o.arr.shift();o.painted=new Set([...o.painted].map(i=>i-1).filter(i=>i>=0));return;
+        case 'back':if(!o.arr.length)throw new RErr('back على حاوية فارغة',line);this.reads.push({id:o.id,i:o.arr.length-1});return o.arr[o.arr.length-1];
+        case 'front':if(!o.arr.length)throw new RErr('front على حاوية فارغة',line);this.reads.push({id:o.id,i:0});return o.arr[0];
+        case 'at':{const i=num(args[0]);if(i<0||i>=o.arr.length)throw new RErr(`الفهرس ${i} خارج الحدود`,line);this.reads.push({id:o.id,i});return o.arr[i]}
+        case 'assign':{const n=num(args[0]);o.arr=[];o.painted.clear();for(let i=0;i<n;i++)o.arr.push(args.length>1?B(args[1]):this.makeDefault(of,true));return}
+        case 'resize':{const n=num(args[0]);while(o.arr.length>n)o.arr.pop();while(o.arr.length<n)o.arr.push(args.length>1?B(args[1]):this.makeDefault(of,true));return}
+        case 'insert':{const p=args[0];if(!p||!p.iter)throw new RErr('insert يحتاج موقعًا (iterator)',line);o.arr.splice(p.i,0,B(args[1]));o.painted=new Set([...o.painted].map(i=>i>=p.i?i+1:i));o.painted.add(p.i);this.writes.push({id:o.id,i:p.i,created:true});return p}
+        case 'erase':{const p=args[0],q=args[1];if(!p||!p.iter)throw new RErr('erase يحتاج موقعًا (iterator)',line);const cnt=q&&q.iter?q.i-p.i:1;o.arr.splice(p.i,cnt);o.painted=new Set([...o.painted].filter(i=>i<p.i||i>=p.i+cnt).map(i=>i>=p.i+cnt?i-cnt:i));return it(p.i)}
+      }
+      throw new RErr(`الدالة ${nm} غير مدعومة لـ vector`,line);
+    }
+    const t=o.type;
+    switch(o.ct){
+      case 'queue':
+        if(nm==='push'||nm==='emplace'){this.cpush(o,this.build(t.of,one()));return}
+        if(nm==='pop'){if(!o.arr.length)throw new RErr('pop على queue فارغة',line);o.arr.shift();return}
+        if(nm==='front'){if(!o.arr.length)throw new RErr('front على queue فارغة',line);this.reads.push({id:o.id,i:0});return o.arr[0]}
+        if(nm==='back'){if(!o.arr.length)throw new RErr('back على queue فارغة',line);this.reads.push({id:o.id,i:o.arr.length-1});return o.arr[o.arr.length-1]}
+        break;
+      case 'stack':
+        if(nm==='push'||nm==='emplace'){this.cpush(o,this.build(t.of,one()));return}
+        if(nm==='pop'){if(!o.arr.length)throw new RErr('pop على stack فارغ',line);o.arr.pop();return}
+        if(nm==='top'){if(!o.arr.length)throw new RErr('top على stack فارغ',line);this.reads.push({id:o.id,i:o.arr.length-1});return o.arr[o.arr.length-1]}
+        break;
+      case 'pq':
+        if(nm==='push'||nm==='emplace'){this.cpush(o,this.build(t.of,one()));return}
+        if(nm==='pop'){if(!o.arr.length)throw new RErr('pop على priority_queue فارغة',line);o.arr.shift();return}
+        if(nm==='top'){if(!o.arr.length)throw new RErr('top على priority_queue فارغة',line);this.reads.push({id:o.id,i:0});return o.arr[0]}
+        break;
+      case 'set':{
+        if(nm==='insert'||nm==='emplace'){this.setInsert(o,this.build(t.of,one()));return}
+        if(nm==='erase'){const a=args[0];if(isObj(a)&&a.iter){o.arr.splice(a.i,1);return it(a.i)}const k=this.build(t.of,a);let c=0;for(let i=o.arr.length-1;i>=0;i--)if(this.cmpVal(o.arr[i],k)===0){o.arr.splice(i,1);c++;if(!t.multi)break}return c}
+        const k=args.length?this.build(t.of,args[0]):undefined;
+        if(nm==='count'){let c=0;for(const e of o.arr)if(this.cmpVal(e,k)===0)c++;this.reads.push({id:o.id,key:keyStr(k),miss:!c});return c}
+        if(nm==='find'){const i=this.setFind(o,k);this.reads.push({id:o.id,key:keyStr(k),miss:i<0});return it(i<0?o.arr.length:i)}
+        if(nm==='lower_bound'||nm==='upper_bound'){let i=0;while(i<o.arr.length&&(nm==='lower_bound'?this.cmpVal(o.arr[i],k)<0:this.cmpVal(o.arr[i],k)<=0))i++;if(i<o.arr.length)this.reads.push({id:o.id,key:keyStr(o.arr[i])});return it(i)}
+        break}
+      case 'map':{
+        if(nm==='insert'||nm==='emplace'){const pr=args.length>1?[args[0],args[1]]:isObj(args[0])&&args[0].list?args[0].list:[args[0].fields.get('first').v,args[0].fields.get('second').v];
+          const k=this.build(t.k,pr[0]);if(this.mapFind(o,k)>=0){this.dups.push({id:o.id,key:keyStr(k)});return}this.mapPut(o,k,this.build(t.v,pr[1]));return}
+        if(nm==='erase'){const a=args[0];if(isObj(a)&&a.iter){o.arr.splice(a.i,1);return it(a.i)}const k=this.build(t.k,a);const i=this.mapFind(o,k);if(i>=0){o.arr.splice(i,1);return 1}return 0}
+        const k=args.length?this.build(t.k,args[0]):undefined;const i=k===undefined?-1:this.mapFind(o,k);
+        if(nm==='count'){this.reads.push({id:o.id,key:keyStr(k),miss:i<0});return i<0?0:1}
+        if(nm==='find'){this.reads.push({id:o.id,key:keyStr(k),miss:i<0});return it(i<0?o.arr.length:i)}
+        if(nm==='at'){if(i<0)throw new RErr(`المفتاح ${fmt(k)} غير موجود في map`,line);this.reads.push({id:o.id,key:keyStr(k)});return o.arr[i].fields.get('second').v}
+        if(nm==='lower_bound'||nm==='upper_bound'){let j=0;while(j<o.arr.length&&(nm==='lower_bound'?this.cmpVal(o.arr[j].fields.get('first').v,k)<0:this.cmpVal(o.arr[j].fields.get('first').v,k)<=0))j++;return it(j)}
+        break}
+    }
+    throw new RErr(`الدالة ${nm} غير مدعومة لهذا النوع`,line);
+  }
+  *strMethod(x,f,s,line){
+    const nm=x.name;const args=[];for(const a of x.args)args.push(yield* this.eval(a,f));
+    const mut=()=>this.lval(x.obj,f);
+    switch(nm){
+      case 'size':case 'length':return s.length;
+      case 'empty':return s.length?0:1;
+      case 'substr':{const p=num(args[0]);const n=args.length>1?num(args[1]):undefined;if(p>s.length)throw new RErr('substr: البداية بعد نهاية النص',line);return n===undefined?s.slice(p):s.substr(p,n)}
+      case 'find':{const i=s.indexOf(String(args[0]),args.length>1?num(args[1]):0);return i}
+      case 'back':return s[s.length-1];case 'front':return s[0];
+      case 'push_back':{const r=yield* mut();r.set(s+conv({kind:'char'},args[0]));return}
+      case 'pop_back':{const r=yield* mut();r.set(s.slice(0,-1));return}
+      case 'append':{const r=yield* mut();r.set(s+String(args[0]));return}
+      case 'clear':{const r=yield* mut();r.set('');return}
+      case 'begin':case 'end':{const r=yield* mut();if(!this.strC)this.strC=new WeakMap();let c=r.box&&this.strC.get(r.box);if(!c){c={strref:r};if(r.box)this.strC.set(r.box,c)}return {iter:true,c,i:nm==='begin'?0:s.length}}
+      case 'c_str':return s;
+    }
+    throw new RErr(`الدالة ${nm} غير مدعومة للنصوص`,line);
+  }
+  /* ---------- range helpers for algorithms ---------- */
+  range(b,e,line){
+    if(isObj(b)&&b.vec)b={iter:true,c:b,i:0};
+    if(!isObj(b)||!b.iter||!isObj(e)||!e.iter||b.c!==e.c)throw new RErr('هذه الدالة تحتاج begin() و end() لنفس الحاوية',line);
+    const c=b.c,self=this;
+    if(c.strref){const arr=[...c.strref.get()];return {c,arr:arr.slice(b.i,e.i),write:a=>{const s=[...c.strref.get()];s.splice(b.i,a.length,...a);c.strref.set(s.join(''))},base:b.i}}
+    return {c,arr:c.arr.slice(b.i,e.i),base:b.i,write:a=>{for(let i=0;i<a.length;i++){c.arr[b.i+i]=a[i];if(c.vec){c.painted.add(b.i+i);self.writes.push({id:c.id,i:b.i+i})}}}};
+  }
+  less(cmp){
+    if(!cmp)return (a,b)=>this.cmpVal(a,b)<0;
+    if(cmp.cmp==='greater')return (a,b)=>this.cmpVal(a,b)>0;
+    if(cmp.cmp==='less')return (a,b)=>this.cmpVal(a,b)<0;
+    if(cmp.lambda)return (a,b)=>truthy(this.callSilent(cmp,[a,b]));
+    throw new RErr('دالة المقارنة غير مفهومة');
+  }
+  callSilent(lam,args){
+    const fn=lam.fn;if(!this.peeking&&fn.name!=='lambda')this.fnUse.add(fn.name);const nf=this.newFrame(fn,null);nf.closure=lam.closure;
+    fn.params.forEach((p,i)=>nf.scopes[0].set(p.name,{name:p.name,type:p.type,v:p.ref?args[i]:this.build(p.type.kind==='auto'?null:p.type,args[i])}));
+    this.silent++;this.frames.push(nf);let rv;
+    try{drain(this.body(fn.body,nf))}catch(e){if(e instanceof Ret)rv=e.v;else{this.frames.pop();this.silent--;throw e}}
+    this.frames.pop();this.silent--;return rv;
+  }
+  /* ---------- calls ---------- */
+  *call(x,f){
+    const line=this.lineOf(x);
+    let fn=this.prog.funcs[x.name],closure=null;
+    if(!fn){const b=this.tryLookup(x.name,f);if(b&&isObj(b.v)&&b.v.lambda){fn=b.v.fn;closure=b.v.closure}}
+    if(!fn){
+      if(!BUILTIN.has(x.name)){const isVar=!!this.tryLookup(x.name,f);
+        throw new RErr(isVar?`«${x.name}» متغير وليس دالة. للوصول إلى عنصر فيه استخدمي الأقواس المربعة، مثل ${x.name}[0]`:`الدالة «${x.name}» غير معرّفة`,line)}
+      return yield* this.builtin(x,f,line);
+    }
+    if(x.args.length!==fn.params.length)throw new RErr(`الدالة ${fn.name} تحتاج ${fn.params.length} من المعاملات`,line);
+    const bound=[];
+    for(let i=0;i<fn.params.length;i++){
+      const p=fn.params[i];
+      if(p.ref){const r=yield* this.lval(x.args[i],f);bound.push({ref:r})}
+      else bound.push({v:yield* this.eval(x.args[i],f)});
+    }
+    if(this.frames.length>300)throw new RErr('عمق الاستدعاء كبير جدًا (أكثر من 300)، تأكدي من الحالة الأساسية',line);
+    const nf=this.newFrame(fn,f);nf.closure=closure;
+    const labels=[];
+    fn.params.forEach((p,i)=>{const b=bound[i];let box;
+      if(b.ref&&b.ref.box)box=b.ref.box;
+      else if(b.ref&&b.ref.proxy)box=b.ref.proxy(p.name);
+      else if(b.ref)box={name:p.name,type:p.type,v:b.ref.get()};
+      else box={name:p.name,type:p.type.kind==='auto'?this.autoType(b.v):p.type,v:this.build(p.type.kind==='auto'?null:p.type,b.v)};
+      nf.scopes[0].set(p.name,box);
+      labels.push(b.ref?(x.args[i].k==='id'?x.args[i].name:'&'):fmt(box.v));
+    });
+    if(!this.silent){
+      const first=bound.find(b=>!b.ref&&typeof b.v==='number');
+      const node={id:++this.nodeSeq,label:fn.name+'('+labels.join(', ')+')',key:first?first.v:null,children:[],parent:f.node,done:false,ret:undefined,memo:false};
+      if(f.node)f.node.children.push(node);else this.roots.push(node);
+      nf.node=node;this.calls++;
+      f.active={s:x.s,e:x.e};
+    }
+    this.frames.push(nf);nf.cur={line:fn.startLine,kind:'enter'};
+    yield* this.pause('call');
+    let rv;
+    try{yield* this.body(fn.body,nf)}catch(e){if(e instanceof Ret)rv=e.v;else throw e}
+    this.frames.pop();
+    if(!this.silent){
+      f.active=null;nf.node.done=true;nf.node.ret=rv;
+      if(fn.type.kind!=='void')f.badges.push({s:x.s,e:x.e,v:rv,fresh:true});
+      yield* this.pause('back');
+      for(const b of f.badges)b.fresh=false;
+    }
+    return rv;
+  }
+  *builtin(x,f,line){
+    const N=x.name;
+    if(N==='swap'){const a=yield* this.lval(x.args[0],f),b=yield* this.lval(x.args[1],f);const t=copyVal(a.get());a.set(b.get());b.set(t);return}
+    if(N==='getline'){const r=yield* this.lval(x.args[1],f);const l=this.readLine();if(l===null)throw new RErr('المدخلات انتهت',line);r.set(l);return CIN}
+    const a=[];for(const e of x.args)a.push(yield* this.eval(e,f));
+    const L=v=>isObj(v)&&v.list?v.list:null;
+    switch(N){
+      case 'max':case 'min':{const vals=L(a[0])||a;let best=vals[0];for(const v of vals.slice(1))if(N==='max'?this.cmpVal(v,best)>0:this.cmpVal(v,best)<0)best=v;return best}
+      case 'abs':case 'llabs':case 'fabs':return Math.abs(num(a[0]));
+      case 'sqrt':return Math.sqrt(num(a[0]));case 'pow':return Math.pow(num(a[0]),num(a[1]));
+      case 'floor':return Math.floor(num(a[0]));case 'ceil':return Math.ceil(num(a[0]));case 'round':return Math.round(num(a[0]));
+      case 'log2':return Math.log2(num(a[0]));case 'log':return Math.log(num(a[0]));case 'exp':return Math.exp(num(a[0]));
+      case 'gcd':case '__gcd':{let p=Math.abs(num(a[0])),q=Math.abs(num(a[1]));while(q){[p,q]=[q,p%q]}return p}
+      case 'make_pair':return mkObj('pair',[['first',this.autoType(a[0]),copyVal(a[0])],['second',this.autoType(a[1]),copyVal(a[1])]]);
+      case 'to_string':return fmt(a[0]);
+      case '__string':return a.length===2?String(a[1]).repeat(num(a[0])):String(a[0]??'');
+      case 'stoi':case 'stoll':return parseInt(a[0],10);
+      case 'tolower':return typeof a[0]==='string'?a[0].toLowerCase():String.fromCharCode(num(a[0])).toLowerCase();
+      case 'toupper':return typeof a[0]==='string'?a[0].toUpperCase():String.fromCharCode(num(a[0])).toUpperCase();
+      case 'isdigit':return /^[0-9]$/.test(conv({kind:'char'},a[0]))?1:0;
+      case 'isalpha':return /^[A-Za-z]$/.test(conv({kind:'char'},a[0]))?1:0;
+      case 'sync_with_stdio':return;
+      case 'next':case 'prev':{const it=a[0];const d=(a.length>1?num(a[1]):1)*(N==='next'?1:-1);return {iter:true,c:it.c,i:it.i+(it.rev?-d:d),rev:it.rev}}
+      case 'distance':return a[1].i-a[0].i;
+      case 'sort':{const r=this.range(a[0],a[1],line);const lt=this.less(a[2]);const arr=r.arr.slice().sort((p,q)=>lt(p,q)?-1:lt(q,p)?1:0);r.write(arr);return}
+      case 'reverse':{const r=this.range(a[0],a[1],line);r.write(r.arr.slice().reverse());return}
+      case 'fill':{const r=this.range(a[0],a[1],line);r.write(r.arr.map(()=>copyVal(a[2])));return}
+      case 'iota':{const r=this.range(a[0],a[1],line);let v=num(a[2]);r.write(r.arr.map(()=>v++));return}
+      case 'max_element':case 'min_element':{const r=this.range(a[0],a[1],line);if(!r.arr.length)return a[1];const lt=this.less(a[2]);let bi=0;for(let i=1;i<r.arr.length;i++){if(N==='max_element'?lt(r.arr[bi],r.arr[i]):lt(r.arr[i],r.arr[bi]))bi=i}if(r.c.vec)this.reads.push({id:r.c.id,i:r.base+bi});return {iter:true,c:r.c,i:r.base+bi}}
+      case 'accumulate':{const r=this.range(a[0],a[1],line);let s=a[2];for(const v of r.arr)s=typeof s==='string'?s+v:num(s)+num(v);return s}
+      case 'count':{const r=this.range(a[0],a[1],line);return r.arr.filter(v=>this.cmpVal(v,a[2])===0).length}
+      case 'find':{const r=this.range(a[0],a[1],line);const i=r.arr.findIndex(v=>this.cmpVal(v,a[2])===0);return {iter:true,c:r.c,i:i<0?a[1].i:r.base+i}}
+      case 'lower_bound':case 'upper_bound':case 'binary_search':{const r=this.range(a[0],a[1],line);let i=0;while(i<r.arr.length&&(N==='upper_bound'?this.cmpVal(r.arr[i],a[2])<=0:this.cmpVal(r.arr[i],a[2])<0))i++;
+        if(N==='binary_search')return i<r.arr.length&&this.cmpVal(r.arr[i],a[2])===0?1:0;return {iter:true,c:r.c,i:r.base+i}}
+      case 'printf':{let fs=String(a[0]);let k=1;this.out+=fs.replace(/%(-?\d*)(?:\.(\d+))?(lld|ld|d|i|f|lf|s|c|%)/g,(m,w,p,t)=>{if(t==='%')return '%';const v=a[k++];let s;if(t==='f'||t==='lf')s=num(v).toFixed(p===undefined?6:+p);else if(t==='s'||t==='c')s=String(v);else s=String(Math.trunc(num(v)));return w?s.padStart(Math.abs(+w)):s});return}
+      case 'scanf':{let k=1;for(const m of String(a[0]).matchAll(/%(lld|ld|d|i|f|lf|s|c)/g)){const ref=a[k++];if(!ref||!ref.ref)throw new RErr('scanf يحتاج & قبل اسم المتغير',line);const tok=this.readTok();if(tok===null)throw new RErr('المدخلات انتهت',line);ref.ref.set(m[1]==='s'||m[1]==='c'?tok:Number(tok))}return k-1}
+    }
+    throw new RErr(`الدالة ${N} غير مدعومة`,line);
+  }
+}
+
+/* ===================== highlighting ===================== */
+const KW=new Set(['if','else','for','while','do','return','break','continue','using','namespace','true','false','struct','typedef']);
+const TY=new Set(['int','long','short','double','float','bool','char','void','auto','unsigned','signed','const','static','size_t','string']);
+function classify(line){
+  const cls=new Array(line.length).fill('t-p');
+  const re=/(\/\/.*$)|("(?:\\.|[^"\\])*"?)|('(?:\\.|[^'\\])*'?)|(#\s*include)|(<[\w./+]+>)|(\b\d+(?:\.\d+)?[uUlLfF]*\b)|([A-Za-z_]\w*)/g;
+  let m;const isInc=/^\s*#/.test(line);
+  while((m=re.exec(line))){
+    let c=null;
+    if(m[1])c='t-com';else if(m[2])c='t-str';else if(m[3])c='t-str';else if(m[4])c='t-type';else if(m[5])c=isInc?'t-inc':null;
+    else if(m[6])c='t-num';else if(m[7])c=KW.has(m[7])?'t-kw':TY.has(m[7])?'t-type':'t-id';
+    if(c)for(let i=m.index;i<m.index+m[0].length;i++)cls[i]=c;
+    if(m[5]&&!isInc)re.lastIndex=m.index+1;
+  }
+  return cls;
+}
+function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderLine(text,ranges){
+  const cls=classify(text);
+  const chars=(a,b)=>{let o='',i=a;while(i<b){let j=i;while(j<b&&cls[j]===cls[i])j++;o+=`<span class="tok ${cls[i]}">${escH(text.slice(i,j))}</span>`;i=j}return o};
+  const rs=ranges.slice().sort((p,q)=>p.a-q.a||q.b-p.b);
+  const build=(from,to,list)=>{let o='',pos=from,i=0;
+    while(i<list.length){const r=list[i];const kids=[];let j=i+1;while(j<list.length&&list[j].a>=r.a&&list[j].b<=r.b){kids.push(list[j]);j++}
+      o+=chars(pos,r.a)+`<span class="cw${r.keep?' keep':''}">`+build(r.a,r.b,kids)+(r.badge!==undefined?`<span class="bdg${r.fresh?' new':''}">${escH(r.badge)}</span>`:'')+'</span>';pos=r.b;i=j}
+    return o+chars(pos,to)};
+  return build(0,text.length,rs);
+}
+
+/* ===================== palette ===================== */
+const PAL={base:['#E1F5EE','#034C3D'],c2:['#FAECE7','#79361F'],c3:['#F1EFE8','#3F3F3C'],c4:['#D6E4F2','#2C5A8C'],c5:['#EEEDFE','#453D8F'],gray:['#EFEFEC','#55554F']};
+function pal(v){if(typeof v!=='number'||!isFinite(v)||!Number.isInteger(v))return PAL.gray;if(v<=1)return PAL.base;return [PAL.c4,PAL.c5,PAL.c2,PAL.c3][((v%4)+4)%4]}
+
+/* ===================== app ===================== */
+const $=id=>document.getElementById(id);
+const codeEl=$('code'),gutter=$('gutter'),inputEl=$('inputBox');
+function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function saveEditor(){store('lab-code',codeEl.value);store('lab-in',inputEl.value)}
+function loadExample(k){codeEl.value=PRESETS[k].code;inputEl.value=PRESETS[k].input;updGutter();saveEditor();$('parseErr').classList.remove('show')}
+function updGutter(){const n=codeEl.value.split('\n').length;let s='';for(let i=1;i<=n;i++)s+=i+'\n';gutter.textContent=s}
+codeEl.addEventListener('input',()=>{updGutter();saveEditor()});
+inputEl.addEventListener('input',saveEditor);
+$('exSel').addEventListener('change',e=>{if(e.target.value){loadExample(e.target.value);e.target.value=''}});
+codeEl.addEventListener('scroll',()=>{gutter.scrollTop=codeEl.scrollTop});
+codeEl.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=codeEl.selectionStart,en=codeEl.selectionEnd;codeEl.value=codeEl.value.slice(0,s)+'\t'+codeEl.value.slice(en);codeEl.selectionStart=codeEl.selectionEnd=s+1;updGutter();saveEditor()}});
+
+/* ---------- run state ---------- */
+let R=null;
+let anim=true,domFrames=new Map(),timer=null;
+function showEditor(){stopPlay();$('stage').classList.remove('show');$('editorView').style.display='';}
+function showStage(){$('editorView').style.display='none';$('stage').classList.add('show')}
+function start(){
+  const src=codeEl.value,input=inputEl.value;const pe=$('parseErr');pe.classList.remove('show');
+  let prog;
+  try{prog=new Parser(src).program()}catch(e){pe.textContent=(e.line?`السطر ${e.line}: `:'')+e.message;pe.classList.add('show');return}
+  if(!prog.funcs.main){pe.textContent='لا توجد دالة main في الكود';pe.classList.add('show');return}
+  const lines=src.split('\n');const lineStart=[0];for(let i=0;i<src.length;i++)if(src[i]==='\n')lineStart.push(i+1);
+  R={src,input,prog,lines,lineStart,defs:buildDefs(prog,lines)};
+  $('stackCol').innerHTML='';domFrames=new Map();
+  if(R.defs){const d=document.createElement('div');d.id='defs';d.className='defs';$('stackCol').appendChild(d)}
+  showStage();restart();
+}
+function restart(){stopPlay();anim=true;fresh();step(true)}
+function fresh(){R.interp=new Interp(R.prog,R.src,R.input);R.gen=R.interp.run();R.steps=0;R.done=false;R.error=null}
+function advance(){
+  if(R.done||R.error)return false;
+  try{const r=R.gen.next();if(r.done||r.value==='end'){R.done=true}R.steps++;return true}
+  catch(e){if(e instanceof RErr||e instanceof CErr){R.error=e;R.steps++;return true}R.error=new RErr('خطأ غير متوقع: '+e.message,0);R.steps++;return true}
+}
+function step(first){if(!R)return;if(advance()||first)render();}
+function back(){
+  if(!R||R.steps<=1)return;stopPlay();const target=R.steps-1;anim=false;fresh();
+  for(let i=0;i<target;i++){advance();if(R.done||R.error)break}
+  domFrames.forEach(el=>el.remove());domFrames=new Map();
+  render();anim=true;
+}
+function toEnd(){
+  if(!R)return;stopPlay();let n=0;anim=false;
+  while(!R.done&&!R.error&&n<300000){advance();n++}
+  domFrames.forEach(el=>el.remove());domFrames=new Map();
+  render();anim=true;
+}
+function speedMs(){const v=+$('speed').value;return Math.round(2200-v*20)}
+function play(){if(timer){stopPlay();return}if(!R||R.done||R.error)return;$('playBtn').textContent='⏸ إيقاف';const tick=()=>{step();if(R.done||R.error){stopPlay();return}timer=setTimeout(tick,speedMs())};timer=setTimeout(tick,120)}
+function stopPlay(){if(timer)clearTimeout(timer);timer=null;$('playBtn').textContent='▶ تشغيل تلقائي'}
+
+/* ---------- highlight index ---------- */
+function hlIndex(hl){
+  const H={ri:new Map(),rk:new Map(),wi:new Map(),wk:new Map(),ci:new Map(),ck:new Map(),miss:new Map(),dup:new Map(),sr:new Map(),sw:new Map(),fb:new Set(),changed:hl.changed};
+  const add=(m,id,v)=>{if(!m.has(id))m.set(id,new Set());m.get(id).add(v)};
+  for(const r of hl.reads){if(r.fbox)H.fb.add(r.fbox);else if(r.sbox)add(H.sr,r.sbox,r.i);else if(r.key!==undefined)add(r.miss?H.miss:H.rk,r.id,r.key);else add(H.ri,r.id,r.i)}
+  for(const w of hl.writes){if(w.init)continue;if(w.sbox)add(H.sw,w.sbox,w.i);else if(w.key!==undefined)add(w.created?H.ck:H.wk,w.id,w.key);else add(w.created?H.ci:H.wi,w.id,w.i)}
+  for(const d of hl.dups)add(H.dup,d.id,d.key);
+  return H;
+}
+const has=(m,id,v)=>!!(m.get(id)&&m.get(id).has(v));
+const A=c=>anim?c:'';
+
+/* ---------- value widgets ---------- */
+function showVal(v,t){
+  if(t&&t.kind==='bool'&&typeof v==='number')return v?'true':'false';
+  if(typeof v==='string'){if(t&&t.kind==='char'||(!t||t.kind==='auto')&&v.length===1)return v==='\0'?"'\\0'":`'${v}'`;return `"${v}"`}
+  if(isObj(v)&&v.iter)return iterDesc(v);
+  return fmt(v);
+}
+function iterDesc(it){
+  const c=it.c;
+  if(c.strref){const s=c.strref.get();return it.i>=0&&it.i<s.length?`→ '${s[it.i]}'`:'end()'}
+  if(it.i<0||it.i>=c.arr.length)return it.rev?'rend()':'end()';
+  return '→ '+fmt(c.arr[it.i]);
+}
+function head(name,kind){return `<div class="dsn">${escH(name)}${kind?`<small>${escH(kind)}</small>`:''}</div>`}
+function scalarHtml(name,box,H,st){
+  const t=box.type,v=box.v;
+  const cls='var'+(H.changed.has(box)?A(' chg'):'')+(H.fb.has(box)?' rd':'');
+  return `<div class="${cls}"><div class="vn">${escH(name)}</div><div class="vv"${st||''}>${escH(showVal(v,t))}</div></div>`;
+}
+function strHtml(name,box,H){
+  const s=box.v;
+  if(s.length>32||!s.length)return scalarHtml(name,box,H);
+  const rd=H.sr.get(box)||new Set(),wr=H.sw.get(box)||new Set();
+  const cells=[...s].map((ch,i)=>`<div class="cell${rd.has(i)?' r':''}${wr.has(i)?A(' w'):''}"><i>${i}</i><b class="ch">${escH(ch===' '?'␣':ch)}</b></div>`).join('');
+  return `<div class="ds${H.changed.has(box)?A(' chg2'):''}">${head(name,'string')}<div class="cells">${cells}</div></div>`;
+}
+function vecHtml(name,v,H,label){
+  const first=v.arr[0];
+  if(isObj(first)&&first.obj)return tableHtml(name,v,H,label);
+  if(isObj(first)&&first.vec){
+    const rows=v.arr.slice(0,16).map((row,i)=>`<div class="row2"><span class="ri">${i}</span>${cellsHtml(row,H,i===0)}</div>`).join('');
+    return `<div class="ds">${head(name,label)}<div class="grid2">${rows}${v.arr.length>16?`<div class="more">… و ${v.arr.length-16} صفوف أخرى</div>`:''}</div></div>`;
+  }
+  return `<div class="ds">${head(name,label)}${cellsHtml(v,H)}</div>`;
+}
+function cellsHtml(v,H,showIdx=true){
+  const MAX=60;const n=v.arr.length;
+  if(!n)return '<div class="cells"><span class="empty">فارغ</span></div>';
+  const cells=v.arr.slice(0,MAX).map((x,i)=>{
+    const p=v.painted.has(i)&&typeof x==='number'?pal(i):null;const st=p?` style="background:${p[0]};color:${p[1]}"`:'';
+    return `<div class="cell${has(H.ri,v.id,i)?' r':''}${has(H.wi,v.id,i)?A(' w'):''}${has(H.ci,v.id,i)?A(' nw'):''}">${showIdx?`<i>${i}</i>`:''}<b${st}>${escH(showVal(x,v.of))}</b></div>`}).join('');
+  return `<div class="cells">${cells}${n>MAX?`<span class="more">… +${n-MAX}</span>`:''}</div>`;
+}
+function tableHtml(name,v,H,label){
+  const fields=[...v.arr[0].fields.keys()];
+  const rows=v.arr.slice(0,40).map((o,i)=>{
+    const rc=(has(H.ri,v.id,i)?' r':'')+(has(H.wi,v.id,i)?A(' w'):'')+(has(H.ci,v.id,i)?A(' nw'):'');
+    return `<tr class="${rc}"><td class="ri">${i}</td>${[...o.fields.values()].map(b=>`<td class="${H.fb.has(b)?'rdc':''}${H.changed.has(b)?A(' chc'):''}">${escH(showVal(b.v,b.type))}</td>`).join('')}</tr>`}).join('');
+  return `<div class="ds">${head(name,label||('vector<'+(v.arr[0].sname)+'>'))}<table class="tbl"><tr><th></th>${fields.map(f=>`<th>${escH(f)}</th>`).join('')}</tr>${rows}</table>${v.arr.length>40?`<div class="more">… +${v.arr.length-40}</div>`:''}</div>`;
+}
+function chips(c,H,cls){
+  return c.arr.map((x,i)=>`<b class="chip ${cls||''}${has(H.ri,c.id,i)?' r':''}${has(H.ci,c.id,i)?A(' nw'):''}">${escH(showVal(x,c.type.of))}</b>`).join('');
+}
+function queueHtml(name,c,H){
+  return `<div class="ds">${head(name,'queue')}<div class="tube"><span class="lab">front</span><div class="items">${c.arr.length?chips(c,H):'<span class="empty">فارغة</span>'}</div><span class="lab">back</span></div></div>`;
+}
+function stackHtml(name,c,H){
+  const items=c.arr.map((x,i)=>`<b class="chip${has(H.ri,c.id,i)?' r':''}${has(H.ci,c.id,i)?A(' nw'):''}">${escH(showVal(x,c.type.of))}</b>`).reverse().join('');
+  return `<div class="ds">${head(name,'stack')}<div class="stk">${c.arr.length?`<span class="lab">top</span>${items}`:'<span class="empty">فارغ</span>'}</div></div>`;
+}
+function pqHtml(name,c,H){
+  const items=c.arr.map((x,i)=>`<b class="chip${i===0?' top':''}${has(H.ri,c.id,i)?' r':''}${has(H.ci,c.id,i)?A(' nw'):''}">${i===0?'<em>top</em>':''}${escH(showVal(x,c.type.of))}</b>`).join('');
+  return `<div class="ds">${head(name,'priority_queue'+(c.type.greater?' (الأصغر أولًا)':''))}<div class="items pq">${c.arr.length?items:'<span class="empty">فارغة</span>'}</div></div>`;
+}
+function setHtml(name,c,H){
+  const kind=(c.type.multi?'multiset':c.type.ordered?'set':'unordered_set');
+  const items=c.arr.map(x=>{const k=keyStr(x);return `<b class="circ${has(H.rk,c.id,k)?' r':''}${has(H.ck,c.id,k)?A(' nw'):''}${has(H.dup,c.id,k)?A(' dup'):''}">${escH(showVal(x,c.type.of))}</b>`}).join('');
+  const miss=[...(H.miss.get(c.id)||[])].map(k=>`<b class="circ miss">✘ ${escH(k)}</b>`).join('');
+  return `<div class="ds">${head(name,kind)}<div class="items">${items||'<span class="empty">فارغة</span>'}${miss}</div></div>`;
+}
+function mapHtml(name,c,H){
+  const kind=c.type.ordered?'map':'unordered_map';
+  const rows=c.arr.map(e=>{const kb=e.fields.get('first'),vb=e.fields.get('second');const k=keyStr(kb.v);
+    const rc=(has(H.rk,c.id,k)?' r':'')+(has(H.ck,c.id,k)?A(' nw'):'')+(has(H.dup,c.id,k)?A(' dup'):'');
+    return `<tr class="${rc}"><td class="mk">${escH(showVal(kb.v,kb.type))}</td><td class="${has(H.wk,c.id,k)||H.changed.has(vb)?A('chc'):''}">${escH(showVal(vb.v,vb.type))}</td></tr>`}).join('');
+  const miss=[...(H.miss.get(c.id)||[])].map(k=>`<tr class="miss"><td class="mk">✘ ${escH(k)}</td><td>غير موجود</td></tr>`).join('');
+  return `<div class="ds">${head(name,kind)}<table class="tbl map"><tr><th>key</th><th>value</th></tr>${rows||''}${miss}</table>${c.arr.length||miss?'':'<span class="empty">فارغة</span>'}</div>`;
+}
+function objHtml(name,o,H,box){
+  const fs=[...o.fields.entries()].map(([fn,b])=>{
+    if(isObj(b.v)&&(b.v.vec||b.v.ct||b.v.obj))return `<div class="var"><div class="vn">${escH(fn)}</div><div class="vv sm">${escH(fmt(b.v))}</div></div>`;
+    return scalarHtml(fn,b,H)}).join('');
+  return `<div class="objc${box&&H.changed.has(box)?A(' chg2'):''}">${head(name,o.sname)}<div class="ofs">${fs}</div></div>`;
+}
+function valueHtml(name,box,H,st){
+  const v=box.v;
+  if(isObj(v)){
+    if(v.vec)return vecHtml(name,v,H,v.ct==='deque'?'deque':v.ct==='array'?'':'');
+    switch(v.ct){case 'queue':return queueHtml(name,v,H);case 'stack':return stackHtml(name,v,H);case 'pq':return pqHtml(name,v,H);case 'set':return setHtml(name,v,H);case 'map':return mapHtml(name,v,H)}
+    if(v.obj)return objHtml(name,v,H,box);
+  }
+  if(typeof v==='string'&&box.type&&box.type.kind==='string')return strHtml(name,box,H);
+  return scalarHtml(name,box,H,st);
+}
+
+/* ---------- definitions panel ---------- */
+function buildDefs(prog,lines){
+  const main=prog.funcs.main;const skip=new Set();
+  for(let L=main.startLine;L<=main.endLine;L++)skip.add(L);
+  for(const it of prog.items)if(it.kind==='global')for(let L=it.s;L<=it.e;L++)skip.add(L);
+  const itemOf={};for(const it of prog.items)if(it.kind!=='global')for(let L=it.s;L<=it.e;L++)itemOf[L]=it;
+  const keep=[];for(let L=1;L<=lines.length;L++){if(skip.has(L))continue;keep.push(L)}
+  // drop blank lines at edges and collapse runs of blanks
+  const blank=L=>!(lines[L-1]||'').trim();
+  const out=[];for(const L of keep){if(blank(L)&&(!out.length||blank(out[out.length-1])))continue;out.push(L)}
+  while(out.length&&blank(out[out.length-1]))out.pop();
+  if(!out.some(L=>!blank(L)))return null;
+  const before=out.filter(L=>L<main.startLine),after=out.filter(L=>L>main.endLine);
+  return {before,after,itemOf,hasItems:prog.items.some(it=>it.kind!=='global')};
+}
+function renderDefs(){
+  const el=$('defs');if(!el||!R.defs)return;
+  const it=R.interp,D=R.defs;const frames=it.frames;const top=frames[frames.length-1];
+  const act=top&&top.fn.name!=='main'?top.fn:null;
+  const waiting=new Set(frames.slice(0,-1).map(f=>f.fn).filter(fn=>fn.name!=='main'));
+  const used=it.hl.structs||new Set();const usedF=it.hl.fns||new Set();
+  const row=L=>{
+    const item=D.itemOf[L];let cls='ln dl';let tag='';
+    if(item&&item.kind==='func'&&act&&act.startLine===item.s){cls+=' act';if(L===item.s)tag='<span class="deftag">◀ قيد التنفيذ</span>'}
+    else if(item&&item.kind==='func'&&[...waiting].some(fn=>fn.startLine===item.s)){cls+=' wait';if(L===item.s)tag='<span class="deftag w">ينتظر</span>'}
+    else if(item&&item.kind==='func'&&usedF.has(item.name)){cls+=' use';if(L===item.s)tag='<span class="deftag">◀ يُستخدم الآن</span>'}
+    else if(item&&item.kind==='struct'&&used.has(item.name)){cls+=' use';if(L===item.s)tag='<span class="deftag">◀ يُستخدم الآن</span>'}
+    return `<div class="${cls}"><span class="lno">${L}</span>${renderLine(R.lines[L-1]||'',[])||' '}${tag}</div>`;
+  };
+  let h='<div class="defsh">التعريفات <small>تُقرأ أولًا، ولا تُنفَّذ إلا لما تُستدعى</small></div><div class="code defcode">';
+  h+=D.before.map(row).join('');
+  h+=`<div class="mainmark">int main() { … } <span>⬇ التنفيذ يبدأ من main</span></div>`;
+  if(D.after.length)h+=D.after.map(row).join('');
+  h+='</div>';
+  el.innerHTML=h;
+  if(anim){const a=el.querySelector('.ln.act,.ln.use');if(a){const box=el.querySelector('.defcode');const t=a.offsetTop-box.offsetTop-30;box.scrollTo({top:Math.max(0,t),behavior:'smooth'})}}
+}
+
+/* ---------- frames ---------- */
+function frameHtml(fr,mode,H){
+  const it=R.interp,fn=fr.fn;
+  const lineOff=L=>R.lineStart[L-1];
+  const rangesFor=L=>{
+    const a0=lineOff(L),b0=a0+R.lines[L-1].length;const rs=[];
+    const add=(s,e,o)=>{if(s>=a0&&e<=b0)rs.push(Object.assign({a:s-a0,b:e-a0},o))};
+    if(fr.active)add(fr.active.s,fr.active.e,{keep:true});
+    const seen=new Map();for(const b of fr.badges)seen.set(b.s+':'+b.e,b);
+    for(const b of seen.values()){const ex=rs.find(r=>r.a===b.s-a0&&r.b===b.e-a0);const t=showVal(b.v);if(ex){ex.badge=t;ex.fresh=b.fresh&&anim}else add(b.s,b.e,{badge:t,fresh:b.fresh&&anim})}
+    return rs;
+  };
+  const isTop=it.frames[it.frames.length-1]===fr&&!R.done;
+  const lines=[];
+  let L0=fn.startLine,L1=fn.endLine;
+  if(mode==='mini'){L0=L1=fr.cur.line}
+  for(let L=L0;L<=L1;L++){
+    const rs=rangesFor(L);
+    let cls='ln';if(rs.some(r=>r.badge!==undefined))cls+=' hasb';
+    if(L===fr.cur.line&&mode!=='mini'){const k=fr.cur.kind;cls+=k==='true'?' true':k==='false'?' false':k==='ret'?' ret':k==='enter'?'':' cur'}
+    let tail='';
+    if(fr.marks[L]!==undefined)tail+=fr.marks[L]?'<span class="mark ok">✔</span>':'<span class="mark no">✘</span>';
+    if(L===fr.cur.line&&fr.cur.kind==='ret'&&isTop)tail+=`<span class="retchip">↩ ${escH(showVal(fr.ret))}</span>`;
+    lines.push(`<div class="${cls}">${renderLine(R.lines[L-1]||'',rs)||' '}${tail}</div>`);
+  }
+  const boxes=[],big=[];
+  for(const sc of fr.scopes)for(const [nm,b] of sc){
+    const isBig=isObj(b.v)&&(b.v.vec||b.v.ct||b.v.obj)||(typeof b.v==='string'&&b.type&&b.type.kind==='string'&&b.v.length>0&&b.v.length<=32);
+    if(isBig){big.push(valueHtml(nm,b,H));continue}
+    const p=(sc===fr.scopes[0]&&fr.fn.params.length&&fr.fn.params[0].name===nm&&mode==='active'&&typeof b.v==='number')?pal(b.v):null;
+    boxes.push(valueHtml(nm,b,H,p?` style="background:${p[0]};border-color:${p[1]};color:${p[1]}"`:''));
+  }
+  const title=fn.name==='lambda'?'λ':fn.name;
+  const startChip=(fn.name==='main'&&fr.cur.kind==='enter'&&isTop)?'<span class="startchip">▶ يبدأ التنفيذ من هنا</span>':'';
+  return `<div class="whead"><span class="fname">${escH(title)}</span>${startChip}<div class="vars">${boxes.join('')}</div></div>${big.length&&mode!=='mini'?`<div class="bigvars">${big.join('')}</div>`:''}<div class="code">${lines.join('')}</div>`;
+}
+function render(){
+  const it=R.interp;const H=hlIndex(it.hl);
+  $('stepno').textContent='الخطوة '+R.steps;
+  const st=$('status');st.className='status';
+  if(R.error){st.className='status bad';st.textContent=(R.error.line?`السطر ${R.error.line}: `:'')+R.error.message}
+  else if(R.done){st.className='status end';st.textContent='✔ انتهى التنفيذ'}
+  $('nextBtn').disabled=R.done||!!R.error;$('prevBtn').disabled=R.steps<=1;
+  const col=$('stackCol');const frames=it.frames.filter(fr=>true);const n=frames.length;const alive=new Set();
+  frames.forEach((fr,i)=>{
+    const mode=(i===n-1)?'active':(i===n-2)?'dim':'mini';
+    alive.add(fr.id);
+    let el=domFrames.get(fr.id);
+    if(!el){el=document.createElement('div');el.className='win'+(anim?' enter':'');col.appendChild(el);domFrames.set(fr.id,el);setTimeout(()=>el.classList.remove('enter'),400)}
+    el.classList.toggle('dim',mode==='dim');el.classList.toggle('mini',mode==='mini');
+    el.innerHTML=frameHtml(fr,mode,H);
+  });
+  for(const [id,el] of domFrames)if(!alive.has(id)){domFrames.delete(id);if(anim){el.classList.add('leave');setTimeout(()=>el.remove(),260)}else el.remove()}
+  let endEl=$('endCard');
+  if(R.done&&!endEl){endEl=document.createElement('div');endEl.id='endCard';endEl.className='card';endEl.innerHTML='<h2>✔ انتهى تنفيذ البرنامج</h2><p class="hint">النتيجة في مربع المخرجات.</p>';col.appendChild(endEl)}
+  else if(!R.done&&endEl)endEl.remove();
+  const top=domFrames.get(frames[n-1]?.id);
+  if(top&&anim)setTimeout(()=>top.scrollIntoView({block:'nearest',behavior:'smooth'}),30);
+  const g=[];for(const [nm,b] of it.globals)g.push(valueHtml(nm,b,H));
+  $('globals').innerHTML=g.length?`<div class="memvars">${g.join('')}</div>`:'<span class="empty">لا توجد متغيرات عامة</span>';
+  $('out').textContent=it.out;
+  renderDefs();
+}
+
+/* ---------- controls ---------- */
+$('mailBtn').addEventListener('click',()=>{const t=$('mailTxt');t.hidden=!t.hidden;$('mailBtn').setAttribute('aria-expanded',String(!t.hidden))});
+$('startBtn').addEventListener('click',start);
+$('editBtn').addEventListener('click',showEditor);
+$('restartBtn').addEventListener('click',()=>{domFrames.forEach(el=>el.remove());domFrames=new Map();restart()});
+$('nextBtn').addEventListener('click',()=>{stopPlay();step()});
+$('prevBtn').addEventListener('click',back);
+$('playBtn').addEventListener('click',play);
+$('endBtn').addEventListener('click',toEnd);
+$('controls').addEventListener('click',e=>e.stopPropagation());
+$('clickArea').addEventListener('click',e=>{if(e.target.closest('button,input,textarea,select,a'))return;if(window.getSelection&&String(window.getSelection()).length)return;stopPlay();step()});
+document.addEventListener('keydown',e=>{
+  if(!$('stage').classList.contains('show'))return;
+  if(e.target.closest&&e.target.closest('textarea,input,select'))return;
+  if((e.key===' '||e.key==='Enter')&&e.target.closest&&e.target.closest('button'))return;
+  if([' ','Enter','PageDown','ArrowLeft','ArrowDown'].includes(e.key)){e.preventDefault();stopPlay();step()}
+  else if(['PageUp','ArrowRight','ArrowUp','Backspace'].includes(e.key)){e.preventDefault();back()}
+});
+{const c=load('lab-code');if(c!==null){codeEl.value=c;inputEl.value=load('lab-in')??''}else{codeEl.value=PRESETS.rec.code;inputEl.value=PRESETS.rec.input}updGutter()}
+</script>
+</body>
+</html>
