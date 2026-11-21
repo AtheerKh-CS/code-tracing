@@ -58,7 +58,15 @@ main{padding:14px 20px 24px}
 .status.bad{display:inline-block;background:#FCEBEA;color:#8A1F17}
 .speed{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
 .speed input{width:110px;accent-color:var(--green)}
-.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,var(--colA,1.15fr)) 14px minmax(0,var(--colB,1fr));column-gap:6px;row-gap:16px;align-items:start}
+.splitter{align-self:stretch;position:relative;cursor:col-resize;touch-action:none;border-radius:8px;outline:none}
+.splitter::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;transform:translateX(-50%);background:var(--line);border-radius:2px;transition:background .2s}
+.splitter .grip{position:sticky;top:45vh;display:block;margin:0 auto;width:12px;height:46px;border-radius:7px;background:#fff;border:1.5px solid var(--gold);box-shadow:0 1px 3px rgba(30,42,74,.18);
+  background-image:radial-gradient(circle,var(--gold) 1.3px,transparent 1.6px);background-size:6px 7px;background-position:center;background-repeat:repeat-y;transition:border-color .2s,background-color .2s}
+.splitter:hover::before,.splitter.drag::before,.splitter:focus-visible::before{background:var(--coral)}
+.splitter:hover .grip,.splitter.drag .grip,.splitter:focus-visible .grip{border-color:var(--coral);background-color:#FDF1E0}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing *{user-select:none}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 #stackCol{min-height:300px}
 .grid>.col:last-child{position:sticky;top:72px;max-height:calc(100vh - 84px);overflow:auto}
@@ -129,6 +137,7 @@ main{padding:14px 20px 24px}
 .empty{color:#A5A39A;font-size:14px}
 #out{direction:ltr;font:14px/1.55 var(--mono);white-space:pre-wrap;margin:0;color:#003B4F;min-height:24px;max-height:160px;overflow:auto;background:var(--codebg);border-radius:10px;padding:8px 10px}
 /* tree */
+.treebox svg{display:block;margin:0 auto}
 .treebox{overflow:auto;max-height:46vh;border-radius:12px;background:#EEF1F8;border:1px solid #D9DEEA;direction:ltr}
 .treetools{display:flex;gap:6px;align-items:center;margin-right:auto}
 .ttb{width:30px;height:30px;border-radius:8px;border:1px solid var(--gold);background:#fff;color:var(--green);font-weight:800;cursor:pointer}
@@ -156,7 +165,22 @@ svg .pop{transform-box:fill-box;transform-origin:center}
 .defs{direction:ltr;background:#fff;border:1.5px dashed var(--gold);border-radius:16px;padding:8px 12px 10px}
 .defsh{direction:rtl;font:700 14px var(--ar);color:var(--green);margin-bottom:4px}
 .defsh small{font-weight:400;color:var(--muted);font-size:12.5px;margin-right:6px}
-.defcode{max-height:240px;overflow:auto;font-size:13.5px}
+.defcode{max-height:15.8em;overflow:auto;font-size:13.5px;scroll-behavior:auto;overscroll-behavior:contain}
+.ln.dl.now{background:#FFD56A;border-left-color:var(--coral);box-shadow:inset 0 0 0 1.5px var(--coral),0 0 10px rgba(229,154,47,.55)}
+.ln.dl.now .tok{opacity:1}
+.ln.dl.now.true{background:#BFE6CB;border-left-color:#2E8B57;box-shadow:inset 0 0 0 1.5px #2E8B57,0 0 10px rgba(46,139,87,.4)}
+.ln.dl.now.false{background:#F4C9C4;border-left-color:#C0392B;box-shadow:inset 0 0 0 1.5px #C0392B,0 0 10px rgba(192,57,43,.4)}
+.mainvars{direction:ltr;padding:4px 2px 2px}
+.mainvars:empty{display:none}
+.mainvars .whead{margin-bottom:4px}
+.mainvars .bigvars{margin-bottom:4px}
+.ln.dl.mainln .tok{opacity:1}
+.ln.dl.mainln.hasb{padding-top:24px}
+.ln.dl.mwait .tok{opacity:.5}
+.ln.dl.mwait .cw.keep .tok{opacity:1}
+.ln.dl.mcall{background:#FFF0B8;border-left-color:var(--coral)}
+.ln.dl.flash{animation:lnGlow .6s ease-out}
+@keyframes lnGlow{from{filter:brightness(1.12);transform:scaleX(1.01)}to{filter:none;transform:none}}
 .ln.dl{padding:0 8px 0 4px;border-radius:5px;border-left:3px solid transparent}
 .ln.dl .tok{opacity:.5}
 .ln.dl.act,.ln.dl.use{background:#FFF0B8;border-left-color:var(--coral)}
@@ -215,7 +239,7 @@ svg .pop{transform-box:fill-box;transform-origin:center}
 @keyframes rowIn{from{background:#CFEBD6}to{background:transparent}}
 @keyframes flashBox{0%{box-shadow:0 0 0 4px #FFE58A}100%{box-shadow:none}}
 @keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-@media (max-width:980px){#editorView,.grid{grid-template-columns:1fr}}
+@media (max-width:980px){#editorView,.grid{grid-template-columns:1fr}.splitter{display:none}}
 @media (max-width:980px){.grid>.col:last-child{position:static;max-height:none;overflow:visible}}
 @media (max-width:700px){
   header{padding:10px 14px;gap:10px}
@@ -290,6 +314,7 @@ svg .pop{transform-box:fill-box;transform-origin:center}
     </div>
     <div class="grid" id="clickArea">
       <div class="col" id="stackCol"></div>
+      <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="تغيير حجم القسمين" tabindex="0" title="اسحبي لتكبير أو تصغير القسمين (نقرتان للرجوع للوضع الأصلي)"><span class="grip"></span></div>
       <div class="col">
         <div class="card" id="memCard">
           <h2>المتغيرات العامة</h2>
@@ -298,6 +323,24 @@ svg .pop{transform-box:fill-box;transform-origin:center}
         <div class="card">
           <h2>المخرجات <small>(cout)</small></h2>
           <pre id="out"></pre>
+        </div>
+        <div class="card closed" id="treeCard">
+          <div class="cardhead">
+            <h2>شجرة الاستدعاءات</h2>
+            <div class="treetools">
+              <span id="treeZoom" hidden><button class="ttb" id="zOut" type="button" aria-label="تصغير">−</button> <button class="ttb" id="zIn" type="button" aria-label="تكبير">+</button></span>
+              <button class="toggle" id="treeTgl" type="button" aria-expanded="false">إظهار ▾</button>
+            </div>
+          </div>
+          <div id="treeBody" hidden>
+            <div class="treebox" id="treeBox"></div>
+            <div class="legend">
+              <span><i class="sw" style="background:#FFD56A;border-color:#E59A2F"></i>الاستدعاء الحالي</span>
+              <span><i class="sw" style="background:#FFF6E0;border-color:#E59A2F;border-style:dashed"></i>ينتظر الرجوع</span>
+              <span><i class="sw" style="background:#E1F5EE;border-color:#034C3D"></i>انتهى (القيمة الراجعة تحته)</span>
+              <span><i class="sw" style="background:#fff;border-color:#2E8B57;border-width:2.5px"></i>قيمة محفوظة (memo)</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -676,12 +719,13 @@ class Interp{
     this.prog=prog;this.src=src;this.inRaw=input;this.inPos=0;this.out='';this.structs=prog.structs;
     this.globals=new Map();this.frames=[];this.roots=[];this.reads=[];this.writes=[];this.changed=new Set();this.dups=[];
     this.hl={reads:[],writes:[],changed:new Set(),dups:[]};this.calls=0;this.nodeSeq=0;this.frameSeq=0;this.ended=false;this.last=null;this.silent=0;
-    this.lineCache=null;this.structUse=new Set();this.fnUse=new Set();
+    this.lineCache=null;this.structUse=new Set();this.fnUse=new Set();this.gline=null;
   }
   /* ---------- driver ---------- */
   *run(){
     OBJ_ID=0;
-    for(const d of this.prog.globals)yield* this.stmtExec(d,null);
+    for(const d of this.prog.globals){this.gline=d.line;yield* this.stmtExec(d,null);this.gline=d.line;yield* this.pause('global')}
+    this.gline=null;
     const main=this.prog.funcs.main;if(!main)throw new RErr('لا توجد دالة main',1);
     const f=this.newFrame(main,null);this.frames.push(f);f.cur={line:main.startLine,kind:'enter'};
     yield* this.pause('call');
@@ -1336,11 +1380,11 @@ function start(){
   const lines=src.split('\n');const lineStart=[0];for(let i=0;i<src.length;i++)if(src[i]==='\n')lineStart.push(i+1);
   R={src,input,prog,lines,lineStart,defs:buildDefs(prog,lines)};
   $('stackCol').innerHTML='';domFrames=new Map();
-  if(R.defs){const d=document.createElement('div');d.id='defs';d.className='defs';$('stackCol').appendChild(d)}
+  {const d=document.createElement('div');d.id='defs';d.className='defs';d.innerHTML='<div class="defsh">الكود كاملًا <small>السطر المضيء هو الذي يُنفَّذ الآن</small></div><div id="mainvars"></div><div class="code defcode" id="defcode"></div>';$('stackCol').appendChild(d)}
   showStage();restart();
 }
 function restart(){stopPlay();anim=true;fresh();step(true)}
-function fresh(){R.interp=new Interp(R.prog,R.src,R.input);R.gen=R.interp.run();R.steps=0;R.done=false;R.error=null}
+function fresh(){treeSeen=0;R.interp=new Interp(R.prog,R.src,R.input);R.gen=R.interp.run();R.steps=0;R.done=false;R.error=null}
 function advance(){
   if(R.done||R.error)return false;
   try{const r=R.gen.next();if(r.done||r.value==='end'){R.done=true}R.steps++;return true}
@@ -1472,54 +1516,84 @@ function valueHtml(name,box,H,st){
 
 /* ---------- definitions panel ---------- */
 function buildDefs(prog,lines){
-  const main=prog.funcs.main;const skip=new Set();
-  for(let L=main.startLine;L<=main.endLine;L++)skip.add(L);
-  for(const it of prog.items)if(it.kind==='global')for(let L=it.s;L<=it.e;L++)skip.add(L);
-  const itemOf={};for(const it of prog.items)if(it.kind!=='global')for(let L=it.s;L<=it.e;L++)itemOf[L]=it;
-  const keep=[];for(let L=1;L<=lines.length;L++){if(skip.has(L))continue;keep.push(L)}
-  // drop blank lines at edges and collapse runs of blanks
-  const blank=L=>!(lines[L-1]||'').trim();
-  const out=[];for(const L of keep){if(blank(L)&&(!out.length||blank(out[out.length-1])))continue;out.push(L)}
-  while(out.length&&blank(out[out.length-1]))out.pop();
-  if(!out.some(L=>!blank(L)))return null;
-  const before=out.filter(L=>L<main.startLine),after=out.filter(L=>L>main.endLine);
-  return {before,after,itemOf,hasItems:prog.items.some(it=>it.kind!=='global')};
+  const itemOf={};
+  for(const it of prog.items)for(let L=it.s;L<=it.e;L++)itemOf[L]=it;
+  const main=prog.funcs.main;
+  for(let L=main.startLine;L<=main.endLine;L++)itemOf[L]={kind:'main',name:'main',s:main.startLine,e:main.endLine};
+  return {itemOf};
 }
 function renderDefs(){
-  const el=$('defs');if(!el||!R.defs)return;
+  const box=$('defcode');if(!box||!R.defs)return;
   const it=R.interp,D=R.defs;const frames=it.frames;const top=frames[frames.length-1];
   const act=top&&top.fn.name!=='main'?top.fn:null;
   const waiting=new Set(frames.slice(0,-1).map(f=>f.fn).filter(fn=>fn.name!=='main'));
   const used=it.hl.structs||new Set();const usedF=it.hl.fns||new Set();
+  // the line being executed right now
+  let nowL=null,nowK='cur';
+  if(!R.done){
+    if(top&&top.fn.name!=='lambda'){nowL=top.cur.line;const k=top.cur.kind;nowK=k==='true'?'true':k==='false'?'false':'cur'}
+    else if(top){nowL=top.cur.line}
+    else if(it.gline)nowL=it.gline;
+  }
+  const mf=frames[0]&&frames[0].fn.name==='main'?frames[0]:null;
+  const mainTop=mf&&top===mf&&!R.done;
+  const H=hlIndex(it.hl);
+  const mv=$('mainvars');
+  if(mv){if(mf){const {boxes,big}=frameVars(mf,mainTop?'active':'dim',H);
+      mv.className='mainvars'+(mainTop||R.done?'':' dim');
+      mv.innerHTML=`<div class="whead"><span class="fname">main</span><div class="vars">${boxes.join('')||'<span class="empty">لا توجد متغيرات بعد</span>'}</div></div>${big.length?`<div class="bigvars">${big.join('')}</div>`:''}`}
+    else if(!R.done){mv.className='mainvars';mv.innerHTML=''}}
   const row=L=>{
     const item=D.itemOf[L];let cls='ln dl';let tag='';
-    if(item&&item.kind==='func'&&act&&act.startLine===item.s){cls+=' act';if(L===item.s)tag='<span class="deftag">◀ قيد التنفيذ</span>'}
-    else if(item&&item.kind==='func'&&[...waiting].some(fn=>fn.startLine===item.s)){cls+=' wait';if(L===item.s)tag='<span class="deftag w">ينتظر</span>'}
-    else if(item&&item.kind==='func'&&usedF.has(item.name)){cls+=' use';if(L===item.s)tag='<span class="deftag">◀ يُستخدم الآن</span>'}
-    else if(item&&item.kind==='struct'&&used.has(item.name)){cls+=' use';if(L===item.s)tag='<span class="deftag">◀ يُستخدم الآن</span>'}
+    if(item&&item.kind==='main'&&mf){
+      const rs=frameRanges(mf,L);cls+=' mainln'+(mainTop?'':' mwait');if(rs.some(r=>r.badge!==undefined))cls+=' hasb';
+      if(L===nowL)cls+=' now'+(nowK!=='cur'?' '+nowK:'')+(anim?' flash':'');
+      else if(L===mf.cur.line&&!mainTop&&!R.done)cls+=' mcall';
+      if(mf.marks[L]!==undefined)tag+=mf.marks[L]?'<span class="mark ok">✔</span>':'<span class="mark no">✘</span>';
+      if(L===mf.cur.line&&mf.cur.kind==='ret'&&mainTop)tag+=`<span class="retchip">↩ ${escH(showVal(mf.ret))}</span>`;
+      return `<div class="${cls}"><span class="lno">${L}</span>${renderLine(R.lines[L-1]||'',rs)||' '}${tag}</div>`;
+    }
+    if(item&&item.kind==='func'&&act&&act.startLine===item.s){cls+=' act'}
+    else if(item&&item.kind==='func'&&[...waiting].some(fn=>fn.startLine===item.s)){cls+=' wait'}
+    else if(item&&item.kind==='func'&&usedF.has(item.name)){cls+=' use'}
+    else if(item&&item.kind==='struct'&&used.has(item.name)){cls+=' use'}
+    if(L===nowL){cls+=' now'+(nowK!=='cur'?' '+nowK:'')+(anim?' flash':'');}
     return `<div class="${cls}"><span class="lno">${L}</span>${renderLine(R.lines[L-1]||'',[])||' '}${tag}</div>`;
   };
-  let h='<div class="defsh">التعريفات <small>تُقرأ أولًا، ولا تُنفَّذ إلا لما تُستدعى</small></div><div class="code defcode">';
-  h+=D.before.map(row).join('');
-  h+=`<div class="mainmark">int main() { … } <span>⬇ التنفيذ يبدأ من main</span></div>`;
-  if(D.after.length)h+=D.after.map(row).join('');
-  h+='</div>';
-  el.innerHTML=h;
-  if(anim){const a=el.querySelector('.ln.act,.ln.use');if(a){const box=el.querySelector('.defcode');const t=a.offsetTop-box.offsetTop-30;box.scrollTo({top:Math.max(0,t),behavior:'smooth'})}}
+  let n=R.lines.length;while(n>1&&!(R.lines[n-1]||'').trim())n--;
+  let h='';for(let L=1;L<=n;L++)h+=row(L);
+  const keep=box.scrollTop;box.innerHTML=h;box.scrollTop=keep;
+  const a=box.querySelector('.ln.now')||box.querySelector('.ln.act');
+  if(a){const t=a.offsetTop-box.offsetTop-(box.clientHeight-a.offsetHeight)/2;
+    const vis=a.offsetTop-box.offsetTop>=box.scrollTop&&a.offsetTop-box.offsetTop+a.offsetHeight<=box.scrollTop+box.clientHeight;
+    if(!anim)box.scrollTop=Math.max(0,t);else if(!vis||Math.abs(box.scrollTop-Math.max(0,t))>box.clientHeight*0.3)box.scrollTo({top:Math.max(0,t),behavior:'smooth'})}
 }
 
 /* ---------- frames ---------- */
-function frameHtml(fr,mode,H){
-  const it=R.interp,fn=fr.fn;
+function frameRanges(fr,L){
   const lineOff=L=>R.lineStart[L-1];
-  const rangesFor=L=>{
+  {
     const a0=lineOff(L),b0=a0+R.lines[L-1].length;const rs=[];
     const add=(s,e,o)=>{if(s>=a0&&e<=b0)rs.push(Object.assign({a:s-a0,b:e-a0},o))};
     if(fr.active)add(fr.active.s,fr.active.e,{keep:true});
     const seen=new Map();for(const b of fr.badges)seen.set(b.s+':'+b.e,b);
     for(const b of seen.values()){const ex=rs.find(r=>r.a===b.s-a0&&r.b===b.e-a0);const t=showVal(b.v);if(ex){ex.badge=t;ex.fresh=b.fresh&&anim}else add(b.s,b.e,{badge:t,fresh:b.fresh&&anim})}
     return rs;
-  };
+  }
+}
+function frameVars(fr,mode,H){
+  const boxes=[],big=[];
+  for(const sc of fr.scopes)for(const [nm,b] of sc){
+    const isBig=isObj(b.v)&&(b.v.vec||b.v.ct||b.v.obj)||(typeof b.v==='string'&&b.type&&b.type.kind==='string'&&b.v.length>0&&b.v.length<=32);
+    if(isBig){big.push(valueHtml(nm,b,H));continue}
+    const p=(sc===fr.scopes[0]&&fr.fn.params.length&&fr.fn.params[0].name===nm&&mode==='active'&&typeof b.v==='number')?pal(b.v):null;
+    boxes.push(valueHtml(nm,b,H,p?` style="background:${p[0]};border-color:${p[1]};color:${p[1]}"`:''));
+  }
+  return {boxes,big};
+}
+function frameHtml(fr,mode,H){
+  const it=R.interp,fn=fr.fn;
+  const rangesFor=L=>frameRanges(fr,L);
   const isTop=it.frames[it.frames.length-1]===fr&&!R.done;
   const lines=[];
   let L0=fn.startLine,L1=fn.endLine;
@@ -1533,15 +1607,9 @@ function frameHtml(fr,mode,H){
     if(L===fr.cur.line&&fr.cur.kind==='ret'&&isTop)tail+=`<span class="retchip">↩ ${escH(showVal(fr.ret))}</span>`;
     lines.push(`<div class="${cls}">${renderLine(R.lines[L-1]||'',rs)||' '}${tail}</div>`);
   }
-  const boxes=[],big=[];
-  for(const sc of fr.scopes)for(const [nm,b] of sc){
-    const isBig=isObj(b.v)&&(b.v.vec||b.v.ct||b.v.obj)||(typeof b.v==='string'&&b.type&&b.type.kind==='string'&&b.v.length>0&&b.v.length<=32);
-    if(isBig){big.push(valueHtml(nm,b,H));continue}
-    const p=(sc===fr.scopes[0]&&fr.fn.params.length&&fr.fn.params[0].name===nm&&mode==='active'&&typeof b.v==='number')?pal(b.v):null;
-    boxes.push(valueHtml(nm,b,H,p?` style="background:${p[0]};border-color:${p[1]};color:${p[1]}"`:''));
-  }
+  const {boxes,big}=frameVars(fr,mode,H);
   const title=fn.name==='lambda'?'λ':fn.name;
-  const startChip=(fn.name==='main'&&fr.cur.kind==='enter'&&isTop)?'<span class="startchip">▶ يبدأ التنفيذ من هنا</span>':'';
+  const startChip='';
   return `<div class="whead"><span class="fname">${escH(title)}</span>${startChip}<div class="vars">${boxes.join('')}</div></div>${big.length&&mode!=='mini'?`<div class="bigvars">${big.join('')}</div>`:''}<div class="code">${lines.join('')}</div>`;
 }
 function render(){
@@ -1551,7 +1619,7 @@ function render(){
   if(R.error){st.className='status bad';st.textContent=(R.error.line?`السطر ${R.error.line}: `:'')+R.error.message}
   else if(R.done){st.className='status end';st.textContent='✔ انتهى التنفيذ'}
   $('nextBtn').disabled=R.done||!!R.error;$('prevBtn').disabled=R.steps<=1;
-  const col=$('stackCol');const frames=it.frames.filter(fr=>true);const n=frames.length;const alive=new Set();
+  const col=$('stackCol');const frames=it.frames.filter(fr=>fr!==it.frames[0]||fr.fn.name!=='main');const n=frames.length;const alive=new Set();
   frames.forEach((fr,i)=>{
     const mode=(i===n-1)?'active':(i===n-2)?'dim':'mini';
     alive.add(fr.id);
@@ -1566,10 +1634,81 @@ function render(){
   else if(!R.done&&endEl)endEl.remove();
   const top=domFrames.get(frames[n-1]?.id);
   if(top&&anim)setTimeout(()=>top.scrollIntoView({block:'nearest',behavior:'smooth'}),30);
+  else if(!top&&anim&&$('defs'))setTimeout(()=>$('defs').scrollIntoView({block:'nearest',behavior:'smooth'}),30);
   const g=[];for(const [nm,b] of it.globals)g.push(valueHtml(nm,b,H));
   $('globals').innerHTML=g.length?`<div class="memvars">${g.join('')}</div>`:'<span class="empty">لا توجد متغيرات عامة</span>';
   $('out').textContent=it.out;
   renderDefs();
+  renderTree();
+}
+
+/* ---------- call tree ---------- */
+let treeOpen=false,treeZoom=1,treeSeen=0;
+function renderTree(){
+  if(!treeOpen||!R||!R.interp)return;
+  const it=R.interp,box=$('treeBox');
+  const root={id:0,label:'main()',children:it.roots,isMain:true,done:R.done};
+  const onStack=new Set(it.frames.map(f=>f.node).filter(Boolean));
+  const topF=it.frames[it.frames.length-1];const topNode=topF?(topF.node||(topF.fn.name==='main'?root:null)):null;
+  let count=0;const NW=n=>Math.max(64,(n.label.length*7.6)+20),NH=n=>n.done&&!n.isMain&&n.ret!==undefined?44:30,GX=12,GY=22;
+  const lay=(n,d)=>{count++;n._d=d;let cw=0;for(const c of n.children){lay(c,d+1);cw+=c._w}if(n.children.length)cw+=GX*(n.children.length-1);n._cw=cw;n._w=Math.max(NW(n),cw)};
+  lay(root,0);
+  if(count>400){box.innerHTML='<div class="empty" style="padding:14px;direction:rtl">الشجرة كبيرة جدًا للعرض ('+count+' عقدة)</div>';return}
+  const depthY=[];let maxD=0;
+  const md=n=>{maxD=Math.max(maxD,n._d);n.children.forEach(md)};md(root);
+  for(let d=0,y=10;d<=maxD;d++){depthY[d]=y;y+=44+GY}
+  const place=(n,x)=>{n._x=x+n._w/2;let cx=x+(n._w-n._cw)/2;for(const c of n.children){place(c,cx);cx+=c._w+GX}};
+  place(root,10);
+  const W=root._w+20,Hh=depthY[maxD]+44+10;
+  let edges='',nodes='';
+  const esc=t=>escH(String(t));
+  const walk=n=>{
+    const w=NW(n),h=NH(n),x=n._x-w/2,y=depthY[n._d];
+    for(const c of n.children){edges+=`<line x1="${n._x}" y1="${y+h}" x2="${c._x}" y2="${depthY[c._d]}" stroke="#9AA8C7" stroke-width="1.6"/>`}
+    let fill='#fff',stroke='#9AA8C7',sw=1.5,dash='',tc='#1E2A4A',glow='';
+    if(n===topNode&&!R.done){fill='#FFD56A';stroke='#E59A2F';sw=2.5;glow=' filter="url(#tglow)"'}
+    else if(onStack.has(n)||(n.isMain&&!R.done)){fill='#FFF6E0';stroke='#E59A2F';dash=' stroke-dasharray="5 3"'}
+    else if(n.done){const p=pal(n.key);fill=p[0];stroke=p[1];tc=p[1]}
+    if(n.memo){stroke='#2E8B57';sw=2.5}
+    const pop=anim&&n.id>treeSeen&&!n.isMain?' pop':'';
+    nodes+=`<g class="nd${pop}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"${dash}${glow}/>`+
+      `<text x="${n._x}" y="${y+20}" text-anchor="middle" font-family="${getComputedStyle(document.body).getPropertyValue('--mono')||'monospace'}" font-size="13" font-weight="700" fill="${tc}">${esc(n.label)}</text>`+
+      (h>30?`<text x="${n._x}" y="${y+37}" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#E59A2F">↩ ${esc(showVal(n.ret))}</text>`:'')+`</g>`;
+    n.children.forEach(walk);
+  };
+  walk(root);
+  box.innerHTML=`<svg width="${W*treeZoom}" height="${Hh*treeZoom}" viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tglow" x="-30%" y="-40%" width="160%" height="180%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#E59A2F" flood-opacity=".7"/></filter></defs>${edges}${nodes}</svg>`;
+  treeSeen=it.nodeSeq;
+  if(topNode&&topNode._x!==undefined){const cx=topNode._x*treeZoom,cy=depthY[topNode._d]*treeZoom;
+    const tl=Math.max(0,cx-box.clientWidth/2),tt=Math.max(0,cy-box.clientHeight/2);
+    box.scrollTo({left:tl,top:tt,behavior:anim?'smooth':'auto'})}
+}
+function setTree(open){
+  treeOpen=open;$('treeCard').classList.toggle('closed',!open);$('treeBody').hidden=!open;$('treeZoom').hidden=!open;
+  $('treeTgl').textContent=open?'إخفاء ▴':'إظهار ▾';$('treeTgl').setAttribute('aria-expanded',String(open));
+  if(open){const a=anim;anim=false;renderTree();anim=a}
+}
+$('treeTgl').addEventListener('click',()=>setTree(!treeOpen));
+$('zIn').addEventListener('click',()=>{treeZoom=Math.min(2,treeZoom+.2);setTree(true)});
+$('zOut').addEventListener('click',()=>{treeZoom=Math.max(.4,treeZoom-.2);setTree(true)});
+
+/* ---------- column splitter ---------- */
+{
+  const grid=$('clickArea'),sp=$('splitter'),DEF=1.15/2.15,MIN=.22,MAX=.82;
+  const setSplit=(f,save)=>{f=Math.min(MAX,Math.max(MIN,f));grid.style.setProperty('--colA',f.toFixed(4)+'fr');grid.style.setProperty('--colB',(1-f).toFixed(4)+'fr');sp.setAttribute('aria-valuenow',Math.round(f*100));if(save)store('lab-split',String(f))};
+  const cur=()=>{const a=parseFloat(grid.style.getPropertyValue('--colA'));return isNaN(a)?DEF:a};
+  const fromX=x=>{const r=grid.getBoundingClientRect();const rtl=getComputedStyle(grid).direction==='rtl';return rtl?(r.right-x)/r.width:(x-r.left)/r.width};
+  const sv=parseFloat(load('lab-split'));setSplit(isNaN(sv)?DEF:sv,false);
+  let dragging=false;
+  sp.addEventListener('pointerdown',e=>{e.preventDefault();dragging=true;sp.setPointerCapture(e.pointerId);sp.classList.add('drag');document.body.classList.add('resizing')});
+  sp.addEventListener('pointermove',e=>{if(dragging)setSplit(fromX(e.clientX),false)});
+  const end=e=>{if(!dragging)return;dragging=false;sp.classList.remove('drag');document.body.classList.remove('resizing');store('lab-split',String(cur()))};
+  sp.addEventListener('pointerup',end);sp.addEventListener('pointercancel',end);
+  sp.addEventListener('dblclick',()=>setSplit(DEF,true));
+  sp.addEventListener('click',e=>e.stopPropagation());
+  sp.addEventListener('keydown',e=>{const rtl=getComputedStyle(grid).direction==='rtl';
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();e.stopPropagation();const d=(e.key==='ArrowLeft')===rtl?.03:-.03;setSplit(cur()+d,true)}
+    else if(e.key==='Home'){e.preventDefault();e.stopPropagation();setSplit(DEF,true)}});
 }
 
 /* ---------- controls ---------- */
@@ -1582,7 +1721,7 @@ $('prevBtn').addEventListener('click',back);
 $('playBtn').addEventListener('click',play);
 $('endBtn').addEventListener('click',toEnd);
 $('controls').addEventListener('click',e=>e.stopPropagation());
-$('clickArea').addEventListener('click',e=>{if(e.target.closest('button,input,textarea,select,a'))return;if(window.getSelection&&String(window.getSelection()).length)return;stopPlay();step()});
+$('clickArea').addEventListener('click',e=>{if(e.target.closest('button,input,textarea,select,a,#treeCard,.splitter'))return;if(window.getSelection&&String(window.getSelection()).length)return;stopPlay();step()});
 document.addEventListener('keydown',e=>{
   if(!$('stage').classList.contains('show'))return;
   if(e.target.closest&&e.target.closest('textarea,input,select'))return;
